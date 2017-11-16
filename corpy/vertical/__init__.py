@@ -75,7 +75,10 @@ class Vertical:
                         if parse_sattrs:
                             attrs = {
                                 m.group(1): m.group(2)
-                                for m in re.finditer(r'\s*?(\S+?)="([^"]*?)"', attrs)
+                                for m in re.finditer(
+                                        r'\s*?(\S+?)="([^"]*?)"',
+                                        "" if attrs is None else attrs
+                                )
                             }
                         self.sattrs[tag] = attrs
                 else:
