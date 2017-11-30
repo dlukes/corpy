@@ -127,6 +127,10 @@ class Syn2015Vertical(Vertical):
         return self.position_template(*position)
 
 
+class ShuffledSyn2015Vertical(Syn2015Vertical):
+    struct_names = ["block"] + Syn2015Vertical.struct_names
+
+
 def ipm(occurrences, N):
     return 1e6 * len(occurrences) / N
 
