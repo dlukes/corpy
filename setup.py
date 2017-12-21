@@ -11,8 +11,15 @@ setup(
 
     packages=find_packages(),
     install_requires=[
+        "click",
         "lazy",
+        "lxml",
         "numpy",
+        "regex",
         "ufal.morphodita (>=1.9)",
-    ]
+    ],
+    entry_points="""
+        [console_scripts]
+        xc=corpy.scripts.xc:main
+    """
 )
