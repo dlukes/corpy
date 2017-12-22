@@ -21,5 +21,6 @@ setup(
     entry_points="""
         [console_scripts]
         xc=corpy.scripts.xc:main
+        zip-verticals=corpy.scripts.zip_verticals:main
     """
 )
