@@ -1,0 +1,17 @@
+[package]
+name = "corpy"
+version = "0.1.0"
+authors = ["David Lukes <dafydd.lukes@gmail.com>"]
+build = "build.rs"
+
+[lib]
+name = "corpy"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+cbindgen = "0.1"
+
+[dependencies]
+log = "0.4.0"
+env_logger = "0.5.0-rc.2"
+libc = "*"

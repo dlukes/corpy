@@ -13,12 +13,50 @@ from collections import namedtuple, defaultdict
 
 import numpy as np
 
+from .._native import ffi, lib
+lib.init_logger()
+
 __all__ = ["Vertical", "Syn2015Vertical", "ipm", "arf"]
 
 Structure = namedtuple("Structure", "name attrs")
 UtklTag = namedtuple(
     "UtklTag", "pos sub gen num case pgen pnum pers tense grad neg act p13 p14 var asp"
 )
+
+
+def charstar2str(charstar):
+    string = str(ffi.string(charstar), "utf-8")
+    lib.string_free(charstar)
+    return string
+
+
+# NOTE: this is probably overkill, since I need to allocate a new string
+# anyway, then why wrap it in a class
+# class RustString(str):
+
+#     def __new__(cls, charstar):
+#         return super().__new__(cls, ffi.string(charstar), "utf-8")
+
+#     def __init__(self, charstar):
+#         self._ptr = charstar
+
+#     def __del__(self):
+#         lib.string_free(self._ptr)
+
+
+class RustVertical:
+
+    def __init__(self, path):
+        self._ptr = lib.vertical_new(path.encode())
+
+    def __del__(self):
+        lib.vertical_free(self._ptr)
+
+    def positions(self):
+        line = lib.vertical_next_line(self._ptr)
+        while line != ffi.NULL:
+            yield charstar2str(line)
+            line = lib.vertical_next_line(self._ptr)
 
 
 class Vertical:
