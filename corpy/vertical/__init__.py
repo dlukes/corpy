@@ -47,7 +47,10 @@ def charstar2str(charstar):
 class RustVertical:
 
     def __init__(self, path):
-        self._ptr = lib.vertical_new(path.encode())
+        ptr = lib.vertical_new(path.encode())
+        if ptr == ffi.NULL:
+            raise RuntimeError(f"Failed to load vertical from {path!r}")
+        self._ptr = ptr
 
     def __del__(self):
         lib.vertical_free(self._ptr)
