@@ -25,24 +25,14 @@ UtklTag = namedtuple(
 )
 
 
+# NOTE: A conversion function is the way to go here, since I need to allocate a new Python str
+# anyway, creating a wrapper class for str (by overriding __new__(), with freeing of the pointer
+# inside __del__()) would be overkill. Just free the pointer as soon as you have the Python str, you
+# don't need it anymore.
 def charstar2str(charstar):
     string = str(ffi.string(charstar), "utf-8")
     lib.string_free(charstar)
     return string
-
-
-# NOTE: this is probably overkill, since I need to allocate a new string
-# anyway, then why wrap it in a class
-# class RustString(str):
-
-#     def __new__(cls, charstar):
-#         return super().__new__(cls, ffi.string(charstar), "utf-8")
-
-#     def __init__(self, charstar):
-#         self._ptr = charstar
-
-#     def __del__(self):
-#         lib.string_free(self._ptr)
 
 
 class RustVertical:
