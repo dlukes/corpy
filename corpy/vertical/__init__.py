@@ -3,6 +3,10 @@
 # be available on the context; corpora shorter than the queue size; start and end corner cases
 # (before the queue fills up / as it's emptying out).
 
+# TODO: Better handling of errors in native code. See
+# https://github.com/shepmaster/rust-ffi-omnibus/issues/57 and
+# https://www.reddit.com/r/rust/comments/744mjw/milksnake_a_new_approach_for_rust_and_python/dsf519p/
+
 import sys
 import gzip
 import os.path as osp
