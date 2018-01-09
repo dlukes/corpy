@@ -51,16 +51,35 @@ class RustVertical:
         if ptr == ffi.NULL:
             raise RuntimeError(f"Failed to load vertical from {path!r}")
         self._ptr = ptr
+        self._last_key = -1
 
     def __del__(self):
         lib.vertical_free(self._ptr)
 
-    def positions(self):
+    def __iter__(self):
         line = lib.vertical_next_line(self._ptr)
         while line != ffi.NULL:
             yield charstar2str(line)
             line = lib.vertical_next_line(self._ptr)
 
+    def __getitem__(self, key):
+        if not isinstance(key, int):
+            raise TypeError(f"Index must be an int, got {key!r} ({type(key)})")
+        if key < self._last_key:
+            raise IndexError(f"Index must be >= {self._last_key}, got {key!r}")
+        while key > self._last_key:
+            try:
+                val = next(self)
+            except StopIteration:
+                raise IndexError(f"Index {key!r} out of bounds")
+            self._last_key += 1
+        return val
+
+
+# reprod no _ptr bug (?):
+# 1. create rv obj
+# 2. try to replace it with one that errors out
+# 3. then exit
 
 class Vertical:
     """Base class for a corpus in the vertical format.
