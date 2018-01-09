@@ -9,6 +9,7 @@ import os.path as osp
 
 import re
 import datetime as dt
+from itertools import islice
 from collections import namedtuple, defaultdict
 
 import numpy as np
@@ -52,34 +53,52 @@ class RustVertical:
             raise RuntimeError(f"Failed to load vertical from {path!r}")
         self._ptr = ptr
         self._last_key = -1
+        self._exhausted = False
+
+        def iterator():
+            line = lib.vertical_next_line(ptr)
+            self._last_key += 1
+            while line != ffi.NULL:
+                print("yielding", line)
+                yield charstar2str(line)
+                line = lib.vertical_next_line(ptr)
+                self._last_key += 1
+            self._exhausted = True
+            print("done iterating")
+
+        self._iter = iterator()
 
     def __del__(self):
-        lib.vertical_free(self._ptr)
+        # if we raised the RuntimeError in __init__, then there is no self._ptr
+        if hasattr(self, "_ptr"):
+            lib.vertical_free(self._ptr)
 
     def __iter__(self):
-        line = lib.vertical_next_line(self._ptr)
-        while line != ffi.NULL:
-            yield charstar2str(line)
-            line = lib.vertical_next_line(self._ptr)
+        print("__iter__ initiated")
+        yield from self._iter
+        print("__iter__ done")
 
+    # NOTE: this is probably not a good idea semantically, indexing is for
+    # random access and assignment, but we use it essentially just for skipping
+    # in sequential access and we don't support assignment at all
     def __getitem__(self, key):
         if not isinstance(key, int):
             raise TypeError(f"Index must be an int, got {key!r} ({type(key)})")
-        if key < self._last_key:
+        elif self._exhausted:
+            raise IndexError("Underlying iterator exhausted")
+        elif key < self._last_key:
             raise IndexError(f"Index must be >= {self._last_key}, got {key!r}")
-        while key > self._last_key:
-            try:
-                val = next(self)
-            except StopIteration:
-                raise IndexError(f"Index {key!r} out of bounds")
-            self._last_key += 1
-        return val
 
+        stop = key - self._last_key
+        start = stop - 1
+        print(key, self._last_key)
+        print(start, stop)
+        if key == 4:
+            print(list(self._iter))
+        else:
+            take = islice(self._iter, start, stop)
+            return next(take)
 
-# reprod no _ptr bug (?):
-# 1. create rv obj
-# 2. try to replace it with one that errors out
-# 3. then exit
 
 class Vertical:
     """Base class for a corpus in the vertical format.
