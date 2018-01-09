@@ -9,7 +9,7 @@ import os.path as osp
 
 import re
 import datetime as dt
-from collections import namedtuple, defaultdict
+from collections import namedtuple, defaultdict, Generator
 
 import numpy as np
 
@@ -37,7 +37,7 @@ def charstar2str(charstar):
 # NOTE: Don't implement __getitem__() on this class, it's probably not a good idea semantically:
 # indexing is for *random* access and assignment, but here we'd be using it essentially just for
 # skipping items in *sequential* access and we don't support assignment at all.
-class RustVertical:
+class RustVerticalGenerator(Generator):
 
     def __init__(self, path):
         ptr = lib.vertical_new(path.encode())
@@ -45,21 +45,24 @@ class RustVertical:
             raise RuntimeError(f"Failed to load vertical from {path!r}")
         self._ptr = ptr
 
-        def iterator():
+        def gen_func():
             line = lib.vertical_next_line(ptr)
             while line != ffi.NULL:
                 yield charstar2str(line)
                 line = lib.vertical_next_line(ptr)
 
-        self._iter = iterator()
+        self._gen_iter = gen_func()
 
     def __del__(self):
         # if we raised the RuntimeError in __init__, then there is no self._ptr
         if hasattr(self, "_ptr"):
             lib.vertical_free(self._ptr)
 
-    def __iter__(self):
-        yield from self._iter
+    def send(self, value):
+        return self._gen_iter.send(value)
+
+    def throw(self, typ, val=None, tb=None):
+        self._gen_iter.throw(typ, val, tb)
 
 
 class Vertical:
