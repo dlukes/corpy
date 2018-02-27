@@ -13,6 +13,14 @@ use std::io::{BufReader, Lines};
 use std::ptr;
 use libc::c_char;
 use std::ffi::{CStr, CString};
+use std::cell::RefCell;
+
+thread_local! {
+    pub static FOO: RefCell<u32> = RefCell::new(1);
+
+    #[allow(unused)]
+    static BAR: RefCell<f32> = RefCell::new(1.0);
+}
 
 type CorpyResult<T> = Result<T, String>;
 
