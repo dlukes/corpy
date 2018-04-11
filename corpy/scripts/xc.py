@@ -52,8 +52,8 @@ def print_fdist(fdist):
 
 
 @cli.command()
-@cli.option("--normalization", help="Warn if identified extended grapheme clusters do not match "
-            "expected normalization form.", type=cli.Choice(NORM_FORMS))
+@cli.option("--expected-normalization", help="Warn if identified extended grapheme clusters do not "
+            "match expected normalization form.", type=cli.Choice(NORM_FORMS))
 @cli.option("--lower", help="Convert to lowercase before processing.", is_flag=True)
 @cli.option("--xml", help="Parse input as XML and process only text nodes and attribute values.",
             is_flag=True)
@@ -61,12 +61,10 @@ def print_fdist(fdist):
 @cli.option("--verbose", "-v", help="(Repeatedly) increase logging level.", count=True)
 @cli.option("--quiet", "-q", help="(Repeatedly) decrease logging level.", count=True)
 @cli.argument("files", type=cli.File("rt", encoding="utf-8"), nargs=-1)
-def main(normalization, lower, xml, lvl, verbose, quiet, files):
+def main(expected_normalization, lower, xml, lvl, verbose, quiet, files):
     """`wc -c` on steroids.
 
-    Count extended grapheme clusters, print their frequency distribution. In the distribution,
-    clusters are decomposed into codepoints listed one after the other. The frequency is shown only
-    in the first row of such groups, subsequent rows have "NA".
+    Count extended grapheme clusters, print their frequency distribution.
 
     FILES are the files to process. Leave empty or - for STDIN.
 
@@ -81,6 +79,6 @@ def main(normalization, lower, xml, lvl, verbose, quiet, files):
             if fragment is not None:
                 fragment = fragment.lower() if lower else fragment
                 fdist.update(count_extended_grapheme_clusters(fragment))
-    if normalization:
-        check_normalization(fdist, normalization)
+    if expected_normalization:
+        check_normalization(fdist, expected_normalization)
     print_fdist(fdist)
