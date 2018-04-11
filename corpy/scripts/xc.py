@@ -42,12 +42,13 @@ def parse(file, xml=False):
 
 def print_fdist(fdist):
     for extended_grapheme_cluster, count in fdist.most_common():
+        names, codepoints = [], []
         for codepoint in extended_grapheme_cluster:
             name = ud.name(codepoint, None)
             # control characters have no names, and for them, we want to print their repr instead
-            codepoint = repr(codepoint) if name is None else codepoint
-            print(count, codepoint, name, sep="\t")
-            count = "NA"
+            codepoints.append(repr(codepoint) if name is None else codepoint)
+            names.append("__NO_NAME__" if name is None else name)
+        print(count, "".join(codepoints), "+".join(names), sep="\t")
 
 
 @cli.command()
