@@ -12,7 +12,7 @@ NAME = osp.splitext(osp.basename(__file__))[0]
 LOG = log.getLogger(NAME)
 LOGLEVELS = [s for f, s in sorted(
     (v, k) for k, v in vars(log).items() if k.isupper() and isinstance(v, int))]
-NORM_FORMS = ("NFC", "NFD", "NKFC", "NKFD")
+NORM_FORMS = ("NFC", "NFD", "NFKC", "NFKD")
 
 
 def count_extended_grapheme_clusters(text):
