@@ -1,15 +1,18 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
 
-
-
 [dev-packages]
-
-"-e ." = "*"
+corpy = {path = ".", editable = true}
 ipdb = "*"
+pytest = "*"
+pydocstyle = "*"
+pylint = "*"
+mypy = "*"
+"flake8" = "*"
+"doc8" = "*"
+yapf = "*"
+rope = "*"

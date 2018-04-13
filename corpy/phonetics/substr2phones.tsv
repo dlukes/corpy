@@ -1,0 +1,82 @@
+SUBSTR	PHONE
+ch	x
+au	a_u
+eu	E_u
+ou	o_u
+dě	J\ E
+ně	J E
+mě	m J E
+tě	c E
+di	J\ I
+ni	J I
+ti	c I
+dí	J\ i:
+ní	J i:
+tí	c i:
+dz	d_z
+dž	d_Z
+qu	k v
+a	a
+b	b
+c	t_s
+d	d
+e	E
+f	f
+g	g
+h	h\
+i	I
+j	j
+k	k
+l	l
+m	m
+n	n
+o	o
+p	p
+q	k v
+r	r
+s	s
+t	t
+u	u
+v	v
+w	v
+x	k s
+y	I
+z	z
+á	a:
+ä	E
+ą	a m
+â	a
+é	E:
+ě	j E
+ë	E
+í	i:
+ó	o:
+ö	E:
+ő	E:
+ô	o
+ú	u:
+ů	u:
+ü	I
+ű	I
+ý	i:
+č	t_S
+ć	t_S
+ď	J\
+đ	d
+ł	l
+ĺ	l
+ľ	l
+ň	J
+ń	J
+ř	P\
+ŕ	r
+š	S
+ś	S
+ş	S
+ť	c
+ž	Z
+ż	Z
+# - is just a technical symbol used in exceptions.tsv to prevent
+# CSPs like voicing assimilation, hiatus insertion, merging of
+# two vowels into a diphthong etc.
+-	-
