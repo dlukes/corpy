@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Set, Tuple, Iterable
 
 import regex as re
 
 
 class Phone:
 
-    def __init__(self, value: str, word_boundary: bool=False):
+    def __init__(self, value: str, word_boundary: bool = False) -> None:
         self.value = value
         self.word_boundary = word_boundary
         # if False, then this phone can be affected by pronunciation rules
@@ -24,10 +24,8 @@ class ProsodicUnit:
     def __init__(self, input_=List[str]):
         self.input = input_
 
-    def transcribe(self, alphabet: str="SAMPA") -> List[Tuple[Phone]]:
-        """Perform transcription.
-
-        """
+    def transcribe(self, alphabet: str = "SAMPA") -> List[Tuple[str, ...]]:
+        """Perform transcription."""
         t = self._str2phone(self.input)
         t = self._voicing_assim(t)
         # TODO: heuristic
@@ -41,7 +39,7 @@ class ProsodicUnit:
         Use pronunciation from dictionary if available, fall back to generic rewriting rules.
 
         """
-        output = []
+        output: List[Phone] = []
         for word in input_:
             # TODO: try to substitute dict-based transcription
             for match in SUBSTR_RE.finditer(word.lower()):
@@ -55,32 +53,36 @@ class ProsodicUnit:
     def _voicing_assim(input_: List[Phone]) -> List[Phone]:
         """Perform regressive assimilation of voicing."""
         output = []
-        previous_phone = Phone(None)
+        previous_phone = Phone("")
         for ph in reversed(input_):
             if not ph.final:
                 if previous_phone.value in TRIGGER_VOICING:
-                    ph = Phone(DEVOICED2VOICED.get(ph.value, ph.value), ph.word_boundary)
+                    ph = Phone(
+                        DEVOICED2VOICED.get(ph.value, ph.value),
+                        ph.word_boundary)
                 elif ph.word_boundary or previous_phone.value in TRIGGER_DEVOICING:
-                    ph = Phone(VOICED2DEVOICED.get(ph.value, ph.value), ph.word_boundary)
+                    ph = Phone(
+                        VOICED2DEVOICED.get(ph.value, ph.value),
+                        ph.word_boundary)
             output.append(ph)
             previous_phone = ph
         output.reverse()
         return output
 
     @staticmethod
-    def _split_words_and_translate(input_: List[Phone], alphabet) -> List[Tuple[str]]:
+    def _split_words_and_translate(input_: List[Phone], alphabet) -> List[Tuple[str, ...]]:
         output = []
         word = []
         alphabet = alphabet.lower()
         for ph in input_:
-            word.append(PHONES.get(ph.value).get(alphabet, ph.value))
+            word.append(PHONES.get(ph.value, {}).get(alphabet, ph.value))
             if ph.word_boundary:
                 output.append(tuple(word))
                 word = []
         return output
 
 
-def transcribe(phrase: str, alphabet="sampa") -> List[Tuple[str]]:
+def transcribe(phrase: str, alphabet="sampa") -> List[Tuple[str, ...]]:
     """Split ``phrase`` on whitespace and return transcription.
 
     ``alphabet`` is one of SAMPA, IPA, CS or CNC (case insensitive).
@@ -92,14 +94,14 @@ def transcribe(phrase: str, alphabet="sampa") -> List[Tuple[str]]:
 # ------------------------------ Utils ------------------------------
 
 
-def load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
-    ans = {}
+def _load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
+    ans: Dict[str, Dict[str, str]] = {}
     lines = tsv.splitlines()
-    header, lines = lines[0], lines[1:]
-    header = [h.lower() for h in header.split("\t")]
+    header_, lines = lines[0], lines[1:]
+    header = [h.lower() for h in header_.split("\t")]
     header.pop(0)
-    for line in lines:
-        line = line.split("\t")
+    for line_ in lines:
+        line = line_.split("\t")
         key = line.pop(0)
         val = ans.setdefault(key, {})
         for k, v in zip(header, line):
@@ -107,8 +109,8 @@ def load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
     return ans
 
 
-def load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, Tuple[str]]:
-    ans = {}
+def _load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, List[str]]:
+    ans: Dict[str, List[str]] = {}
     lines = tsv.splitlines()
     lines.pop(0)
     for line in lines:
@@ -120,7 +122,9 @@ def load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, Tuple[str]]:
     return ans
 
 
-def load_voicing_pairs(tsv: str, allowed: Dict) -> Tuple[Dict[str, str], Dict[str, str], Set]:
+def _load_voicing_pairs(
+        tsv: str, allowed: Dict
+) -> Tuple[Dict[str, str], Dict[str, str], Set[str], Set[str]]:
     devoiced2voiced, voiced2devoiced = {}, {}
     lines = tsv.splitlines()
     lines.pop(0)
@@ -136,19 +140,19 @@ def load_voicing_pairs(tsv: str, allowed: Dict) -> Tuple[Dict[str, str], Dict[st
     return devoiced2voiced, voiced2devoiced, trigger_voicing, trigger_devoicing
 
 
-def create_substr_re(substr_list: List[str]) -> re.Regex:
+def _create_substr_re(substr_list: Iterable[str]) -> re.Regex:
     substr_list = sorted(substr_list, key=len, reverse=True) + ["."]
     return re.compile("|".join(substr_list))
 
 
-PHONES = load_phones(Path(__file__).with_name("phones.tsv").read_text())
-SUBSTR2PHONES = load_substr2phones(
-    Path(__file__).with_name("substr2phones.tsv").read_text(), PHONES)
-DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = load_voicing_pairs(
-    Path(__file__).with_name("voicing_pairs.tsv").read_text(), PHONES)
+DIR = Path(__file__)
+PHONES = _load_phones(DIR.with_name("phones.tsv").read_text())
+SUBSTR2PHONES = _load_substr2phones(
+    DIR.with_name("substr2phones.tsv").read_text(), PHONES)
+DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
+    DIR.with_name("voicing_pairs.tsv").read_text(), PHONES)
 
-SUBSTR_RE = create_substr_re(SUBSTR2PHONES.keys())
-
+SUBSTR_RE = _create_substr_re(SUBSTR2PHONES.keys())
 
 s = transcribe("máš hlad")
 i = transcribe("máš hlad", "IPA")
