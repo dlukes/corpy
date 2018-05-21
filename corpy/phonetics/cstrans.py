@@ -4,6 +4,76 @@ from typing import Dict, List, Set, Tuple, Iterable
 import regex as re
 
 
+# ------------------------------ Utils ------------------------------
+
+
+def _load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
+    ans: Dict[str, Dict[str, str]] = {}
+    lines = tsv.splitlines()
+    header_, lines = lines[0], lines[1:]
+    header = [h.lower() for h in header_.split("\t")]
+    header.pop(0)
+    for line_ in lines:
+        line = line_.split("\t")
+        key = line.pop(0)
+        val = ans.setdefault(key, {})
+        for k, v in zip(header, line):
+            val[k] = v
+    return ans
+
+
+def _load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, List[str]]:
+    ans: Dict[str, List[str]] = {}
+    lines = tsv.splitlines()
+    lines.pop(0)
+    for line in lines:
+        substr, phones = line.split("\t")
+        phones_for_substr = ans.setdefault(substr, [])
+        for ph in phones.split():
+            assert ph in allowed, f"Unexpected phone {ph!r}"
+            phones_for_substr.append(ph)
+    return ans
+
+
+def _load_voicing_pairs(
+        tsv: str, allowed: Dict
+) -> Tuple[Dict[str, str], Dict[str, str], Set[str], Set[str]]:
+    devoiced2voiced, voiced2devoiced = {}, {}
+    lines = tsv.splitlines()
+    lines.pop(0)
+    for line in lines:
+        devoiced, voiced = line.split("\t")
+        assert devoiced in allowed, f"Unexpected phone {devoiced!r}"
+        assert voiced in allowed, f"Unexpected phone {voiced!r}"
+        devoiced2voiced[devoiced] = voiced
+        voiced2devoiced[voiced] = devoiced
+    trigger_voicing = set(voiced2devoiced.keys())
+    trigger_voicing.remove("v")
+    trigger_devoicing = set(devoiced2voiced.keys())
+    return devoiced2voiced, voiced2devoiced, trigger_voicing, trigger_devoicing
+
+
+def _create_substr_re(substr_list: Iterable[str]) -> re.Regex:
+    substr_list = sorted(substr_list, key=len, reverse=True) + ["."]
+    return re.compile("|".join(substr_list))
+
+
+# ------------------------------ Global variables ------------------------------
+
+
+DIR = Path(__file__)
+PHONES = _load_phones(DIR.with_name("phones.tsv").read_text())
+SUBSTR2PHONES = _load_substr2phones(
+    DIR.with_name("substr2phones.tsv").read_text(), PHONES)
+DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
+    DIR.with_name("voicing_pairs.tsv").read_text(), PHONES)
+
+SUBSTR_RE = _create_substr_re(SUBSTR2PHONES.keys())
+
+
+# ------------------------------ Public API ------------------------------
+
+
 class Phone:
 
     def __init__(self, value: str, word_boundary: bool = False) -> None:
@@ -90,69 +160,6 @@ def transcribe(phrase: str, alphabet="sampa") -> List[Tuple[str, ...]]:
     """
     return ProsodicUnit(phrase.strip().split()).transcribe(alphabet)
 
-
-# ------------------------------ Utils ------------------------------
-
-
-def _load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
-    ans: Dict[str, Dict[str, str]] = {}
-    lines = tsv.splitlines()
-    header_, lines = lines[0], lines[1:]
-    header = [h.lower() for h in header_.split("\t")]
-    header.pop(0)
-    for line_ in lines:
-        line = line_.split("\t")
-        key = line.pop(0)
-        val = ans.setdefault(key, {})
-        for k, v in zip(header, line):
-            val[k] = v
-    return ans
-
-
-def _load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, List[str]]:
-    ans: Dict[str, List[str]] = {}
-    lines = tsv.splitlines()
-    lines.pop(0)
-    for line in lines:
-        substr, phones = line.split("\t")
-        phones_for_substr = ans.setdefault(substr, [])
-        for ph in phones.split():
-            assert ph in allowed, f"Unexpected phone {ph!r}"
-            phones_for_substr.append(ph)
-    return ans
-
-
-def _load_voicing_pairs(
-        tsv: str, allowed: Dict
-) -> Tuple[Dict[str, str], Dict[str, str], Set[str], Set[str]]:
-    devoiced2voiced, voiced2devoiced = {}, {}
-    lines = tsv.splitlines()
-    lines.pop(0)
-    for line in lines:
-        devoiced, voiced = line.split("\t")
-        assert devoiced in allowed, f"Unexpected phone {devoiced!r}"
-        assert voiced in allowed, f"Unexpected phone {voiced!r}"
-        devoiced2voiced[devoiced] = voiced
-        voiced2devoiced[voiced] = devoiced
-    trigger_voicing = set(voiced2devoiced.keys())
-    trigger_voicing.remove("v")
-    trigger_devoicing = set(devoiced2voiced.keys())
-    return devoiced2voiced, voiced2devoiced, trigger_voicing, trigger_devoicing
-
-
-def _create_substr_re(substr_list: Iterable[str]) -> re.Regex:
-    substr_list = sorted(substr_list, key=len, reverse=True) + ["."]
-    return re.compile("|".join(substr_list))
-
-
-DIR = Path(__file__)
-PHONES = _load_phones(DIR.with_name("phones.tsv").read_text())
-SUBSTR2PHONES = _load_substr2phones(
-    DIR.with_name("substr2phones.tsv").read_text(), PHONES)
-DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
-    DIR.with_name("voicing_pairs.tsv").read_text(), PHONES)
-
-SUBSTR_RE = _create_substr_re(SUBSTR2PHONES.keys())
 
 s = transcribe("máš hlad")
 i = transcribe("máš hlad", "IPA")
