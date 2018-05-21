@@ -1,3 +1,10 @@
+"""Perform rule-based phonetic transcription of Czech.
+
+Some frequent exceptions to the otherwise fairly regular
+orthography-to-phonetics mapping are overridden using a pronunciation
+lexicon.
+
+"""
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Iterable
 
