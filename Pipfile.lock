@@ -1,10 +1,12 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "bf6a7ab71a85fb29dce5dc55b1c361657b358568765009bd9c8646cbb0d9d6c2"
+            "sha256": "f1b2e85b4e9d1df20aaf4e08a96d20276936156ad91eeddc2f1ab94da74c4c83"
         },
         "pipfile-spec": 6,
-        "requires": {},
+        "requires": {
+            "python_version": "3.6"
+        },
         "sources": [
             {
                 "name": "pypi",
@@ -15,6 +17,14 @@
     },
     "default": {},
     "develop": {
+        "appnope": {
+            "hashes": [
+                "sha256:5b26757dc6f79a3b7dc9fab95359328d5747fcb2409d331ea66d0272b90ab2a0",
+                "sha256:8b995ffe925347a2138d7ac0fe77155e4311a0ea6d6da4f5128fe4b3cbe5ed71"
+            ],
+            "markers": "sys_platform == 'darwin'",
+            "version": "==0.1.0"
+        },
         "astroid": {
             "hashes": [
                 "sha256:032f6e09161e96f417ea7fad46d3fac7a9019c775f202182c22df0e4f714cb1c",

@@ -16,3 +16,6 @@ mypy = "*"
 "doc8" = "*"
 yapf = "*"
 rope = "*"
+
+[requires]
+python_version = "3.6"
