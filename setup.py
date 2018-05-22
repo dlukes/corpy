@@ -10,6 +10,7 @@ setup(
     url="https://github.com/dlukes/corpy",
 
     packages=find_packages(),
+    python_requires=">=3.6",
     install_requires=[
         "click",
         "lazy",
