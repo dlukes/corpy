@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from corpy.phonetics import cstrans as cs
+from corpy.phonetics import cs
 
 DIR = Path(__file__).parent
 

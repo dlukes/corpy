@@ -1,4 +1,4 @@
-from corpy.phonetics import cstrans as cs
+from corpy.phonetics import cs
 
 
 def test_voicing_assimilation_over_word_boundaries():
