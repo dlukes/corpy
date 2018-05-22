@@ -1,4 +1,8 @@
 SAMPA	IPA	CS	CNC
+# - is just a technical symbol used in exceptions.tsv to prevent
+# CSPs like voicing assimilation, hiatus insertion, merging of
+# two vowels into a diphthong etc.
+-	-	-	-
 i:	iː	í	í
 I	ɪ	i	i
 E	ɛ	e	e

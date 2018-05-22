@@ -48,6 +48,7 @@ y	I
 z	z
 á	a:
 é	E:
+í	i:
 ó	o:
 ú	u:
 ý	i:
@@ -59,3 +60,7 @@ z	z
 ť	c
 ů	u:
 ž	Z
+# - is just a technical symbol used in exceptions.tsv to prevent
+# CSPs like voicing assimilation, hiatus insertion, merging of
+# two vowels into a diphthong etc.
+-	-
