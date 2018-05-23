@@ -1,6 +1,6 @@
-============
-PyMorphoDiTa
-============
+================
+corpy.morphodita
+================
 
 .. _overview:
 

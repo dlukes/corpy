@@ -18,6 +18,8 @@ Currently available sub-packages are:
 - `vertical <corpy/vertical/README.rst>`_: parsing corpora in the vertical
   format devised originally for `CWB <http://cwb.sourceforge.net/>`_, used also
   by `(No)SketchEngine <https://nlp.fi.muni.cz/trac/noske/>`_
+- `phonetics <corpy/phonetics/README.rst>`_: rule-based phonetic transcription
+  of Czech
 
 Installation
 ============
