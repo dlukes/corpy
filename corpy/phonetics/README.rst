@@ -39,10 +39,21 @@ assimilation of voicing:
 
 .. code:: python
 
-   >>> cs.transcribe("máš- hlad")
+   >>> cs.transcribe("máš -hlad")
+   [('m', 'a:', 'S'), ('h\\', 'l', 'a', 't')]
 
-Tokens containing non-alphabetic characters (except for hyphens) are passed
-through as is:
+As you can see, these special hyphens get deleted in the process of
+transcription, so if you want a literal hyphen, it must be inside a token
+with either no alphabetic characters, or at least one other non-alphabetic
+character:
+
+.. code:: python
+
+   >>> cs.transcribe("- --- -.- -hlad?")
+   ['-', '---', '-.-', '-hlad?']
+
+In general, tokens containing non-alphabetic characters (modulo the special
+treatment of hyphens described above) are passed through as is:
 
 .. code:: python
 
@@ -61,8 +72,8 @@ past the ".."):
 
 Finally, when the input is a single string, it's simply split on whitespace,
 but you can also provide your own tokenization. E.g. if your input string
-contains square brackets to mark overlapping speech, this is probably not the
-output you want:
+contains unspaced square brackets to mark overlapping speech, this is
+probably not the output you want:
 
 .. code:: python
 

@@ -118,14 +118,21 @@ class _ExceptionRewriter:
 
 
 DIR = Path(__file__)
-PHONES = _load_phones(DIR.with_name("phones.tsv").read_text())  # pylint: disable=E1101
+PHONES = _load_phones(
+    DIR.with_name("phones.tsv").read_text(encoding="utf-8")  # pylint: disable=E1101
+)
 SUBSTR2PHONES = _load_substr2phones(
-    DIR.with_name("substr2phones.tsv").read_text(), PHONES)  # pylint: disable=E1101
+    DIR.with_name("substr2phones.tsv").read_text(encoding="utf-8"),  # pylint: disable=E1101
+    PHONES
+)
 DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
-    DIR.with_name("voicing_pairs.tsv").read_text(), PHONES)  # pylint: disable=E1101
-
+    DIR.with_name("voicing_pairs.tsv").read_text(encoding="utf-8"),  # pylint: disable=E1101
+    PHONES
+)
 SUBSTR_RE = _create_substr_re(SUBSTR2PHONES.keys())
-REWRITER = _ExceptionRewriter(DIR.with_name("exceptions.tsv").read_text())  # pylint: disable=E1101
+REWRITER = _ExceptionRewriter(
+    DIR.with_name("exceptions.tsv").read_text(encoding="utf-8")  # pylint: disable=E1101
+)
 
 
 # ------------------------------ Public API ------------------------------
@@ -274,7 +281,16 @@ def _separate_tokens(
     matrix: List[Optional[str]] = []
     to_transcribe = []
     for token in tokens:
-        if re.fullmatch(r"[\p{Alphabetic}\-]+", token):
+        if re.fullmatch(r"[\p{Alphabetic}\-]*\p{Alphabetic}[\p{Alphabetic}\-]*", token):
+            # instead of simply checking for a final hyphen in the outer
+            # condition and silently shoving an otherwise transcribable token
+            # into matrix, it's better to fail and alert the user they probably
+            # meant something else
+            if token.endswith("-"):
+                raise ValueError(
+                    f"Can't transcribe token ending with hyphen ({token!r}), place hyphen at "
+                    "beginning of next token instead"
+                )
             to_transcribe.append(token)
             matrix.append(None)
         elif token in prosodic_boundary_symbols:
@@ -302,8 +318,11 @@ def transcribe(
     alphabetical characters and possibly hyphens (``-``). Other tokens are
     passed through unchanged. Hyphens have a special role: they prevent
     interactions between graphemes or phones from taking place, which means
-    you can e.g. cancel assimilation of voicing in a cluster like ``"tb"`` by
-    inserting a hyphen between the graphemes: ``"t-b"``.
+    you can e.g. cancel assimilation of voicing in a cluster like "tb" by
+    inserting a hyphen between the graphemes: "t-b". They are removed from
+    the final output. If you want a **literal hyphen**, it must be inside a
+    token with either no alphabetic characters, or at least one other
+    non-alphabetic character (e.g. "-", "---", "-hlad?", etc.).
 
     Returns a list where **transcribed tokens** are represented as **tuples
     of strings** (phones) and **non-transcribed tokens** (which were just

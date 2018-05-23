@@ -1,3 +1,5 @@
+import pytest
+
 from corpy.phonetics import cs
 
 
@@ -95,8 +97,8 @@ def test_exceptions():
 
 
 def test_separate_tokens():
-    assert cs._separate_tokens(["foo", "bar-", "baz?"], set()) == \
-        ([None, None, "baz?"], ["foo", "bar-"])
+    assert cs._separate_tokens(["foo", "-bar", "baz?"], set()) == \
+        ([None, None, "baz?"], ["foo", "-bar"])
     # a "-" is inserted in the list of tokens to transcribe at each prosodic
     # boundary; it will be removed in the process of transcription after it has
     # performed its role of blocking interaction between otherwise neighboring
@@ -117,13 +119,13 @@ def test_prosodic_boundaries():
 
 
 def test_user_added_hyphen():
-    # start of string
-    assert cs.transcribe("-máš hlad") == [("m", "a:", "Z"), ("h\\", "l", "a", "t")]
-    # mid string, start word
+    # start of word
     assert cs.transcribe("máš -hlad") == [("m", "a:", "S"), ("h\\", "l", "a", "t")]
-    # mid string, end word
-    assert cs.transcribe("máš- hlad") is None
-    # mid string, mid word
-    assert cs.transcribe("máš hl-ad") is None
-    # end
-    assert cs.transcribe("máš hlad-") is None
+    # mid word
+    assert cs.transcribe("d-štít") == [("d", "S", "c", "i:", "t")]
+    # end of word isn't allowed
+    with pytest.raises(ValueError) as exc_info:
+        cs.transcribe("máš- hlad")
+    assert "máš-" in str(exc_info.value)
+    # and these are some ways you can have a literal hyphen
+    assert cs.transcribe("- --- ?hlad- hl?-ad etc.") == ["-", "---", "?hlad-", "hl?-ad", "etc."]

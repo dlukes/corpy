@@ -8,7 +8,7 @@ DIR = Path(__file__).parent
 def test_regressions():
     """Test all transcriptions that worked at some point."""
     fpath = DIR.joinpath("test_phonetics_regressions.tsv")
-    cases = fpath.read_text().splitlines()[1:]  # pylint: disable=E1101
+    cases = fpath.read_text(encoding="utf-8").splitlines()[1:]  # pylint: disable=E1101
     for i, case in enumerate(cases):
         orth, alphabet, phon = case.split("\t")
         auto = cs.transcribe(orth, alphabet=alphabet, hiatus=True)
