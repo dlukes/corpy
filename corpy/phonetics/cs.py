@@ -9,7 +9,7 @@ import unicodedata as ud
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Tuple  # noqa: F401
+from typing import Dict, Iterable, List, Optional, Set, Tuple, Union  # noqa: F401
 
 import regex as re
 
@@ -157,7 +157,7 @@ class ProsodicUnit:
         self.orthographic = orthographic
         self._phonetic: Optional[List[Phone]] = None
 
-    def phonetic(self, alphabet: str = "SAMPA", *, hiatus=False) -> List[Tuple[str, ...]]:
+    def phonetic(self, *, alphabet: str = "SAMPA", hiatus=False) -> List[Tuple[str, ...]]:
         """Phonetic transcription of ProsodicUnit."""
         if self._phonetic is None:
             t = self._str2phones(self.orthographic)
@@ -190,7 +190,10 @@ class ProsodicUnit:
             word = re.sub(r"([^aeoiuy])\1", r"\1", word)
             for match in SUBSTR_RE.finditer(word.lower()):
                 substr = match.group()
-                phones = SUBSTR2PHONES[substr]
+                try:
+                    phones = SUBSTR2PHONES[substr]
+                except KeyError:
+                    raise ValueError(f"Unexpected substring in input: {substr!r}")
                 output.extend(Phone(ph) for ph in phones)
             output[-1].word_boundary = True
         return output
@@ -257,14 +260,82 @@ class ProsodicUnit:
         return output
 
 
-def transcribe(phrase: str, *, alphabet="sampa", hiatus=False) -> List[Tuple[str, ...]]:
-    """Split ``phrase`` on whitespace and return transcription.
+def _separate_tokens(
+    tokens: List[str],
+    prosodic_boundary_symbols: Set[str]
+) -> Tuple[List[Optional[str]], List[str]]:
+    """Separate tokens for transcription from those that will be left as is.
 
-    ``alphabet`` is one of SAMPA, IPA, CS or CNC (case insensitive).
+    Returns two lists: the first one is a matrix for the result containing
+    non-alphabetic tokens and gaps for the alphabetic ones, the second one
+    contains just the alphabetic ones.
+
+    """
+    matrix: List[Optional[str]] = []
+    to_transcribe = []
+    for token in tokens:
+        if re.fullmatch(r"[\p{Alphabetic}\-]+", token):
+            to_transcribe.append(token)
+            matrix.append(None)
+        elif token in prosodic_boundary_symbols:
+            to_transcribe.append("-")
+            matrix.append(token)
+        else:
+            matrix.append(token)
+    return matrix, to_transcribe
+
+
+def transcribe(
+    phrase: Union[str, Iterable[str]],
+    *,
+    alphabet="sampa",
+    hiatus=False,
+    prosodic_boundary_symbols=set()
+) -> List[Union[str, Tuple[str, ...]]]:
+    """Phonetically transcribe ``phrase``.
+
+    ``phrase`` is either a string (in which case it is split on whitespace)
+    or an iterable of strings (in which case it's considered as already
+    tokenized by the user).
+
+    Transcription is attempted for tokens which consist purely of
+    alphabetical characters and possibly hyphens (``-``). Other tokens are
+    passed through unchanged. Hyphens have a special role: they prevent
+    interactions between graphemes or phones from taking place, which means
+    you can e.g. cancel assimilation of voicing in a cluster like ``"tb"`` by
+    inserting a hyphen between the graphemes: ``"t-b"``.
+
+    Returns a list where **transcribed tokens** are represented as **tuples
+    of strings** (phones) and **non-transcribed tokens** (which were just
+    passed through as-is) as plain **strings**.
+
+    ``alphabet`` is one of SAMPA, IPA, CS or CNC (case insensitive) and
+    determines the symbol alphabet used in the phonetic transcript.
 
     When ``hiatus == True``, a /j/ phone is added between a high front vowel
     and a subsequent vowel.
 
+    Various connected speech processes such as assimilation of voicing are
+    emulated even across word boundaries. By default, this happens
+    **irrespective of intervening non-transcribed tokens**. If you want some
+    types of non-transcribed tokens to constitute an obstacle to interactions
+    between phones, pass them as a set via the ``prosodic_boundary_symbols``
+    argument. E.g. ``prosodic_boundary_symbols={"?", ".."}`` will prevent
+    CSPs from being emulated across ``?`` and ``..`` tokens.
+
     """
-    word_list = ud.normalize("NFC", phrase.strip()).split()
-    return ProsodicUnit(word_list).phonetic(alphabet, hiatus=hiatus)
+    try:
+        if isinstance(phrase, str):
+            tokens = ud.normalize("NFC", phrase.strip()).split()
+        else:
+            tokens = [ud.normalize("NFC", t) for t in phrase]
+    except TypeError as e:
+        raise TypeError(
+            f"Expected str or Iterable[str] as phrase argument, got {type(phrase)} instead"
+        ) from e
+    matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
+    transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
+    return [
+        m if m is not None else transcribed.pop(0)  # type: ignore
+        for m in matrix
+    ]
