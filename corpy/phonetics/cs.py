@@ -51,7 +51,7 @@ def _load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, List[str]]:
 
 
 def _load_voicing_pairs(
-        tsv: str, allowed: Dict
+    tsv: str, allowed: Dict
 ) -> Tuple[Dict[str, str], Dict[str, str], Set[str], Set[str]]:
     devoiced2voiced, voiced2devoiced = {}, {}
     lines = tsv.splitlines()
@@ -76,7 +76,6 @@ def _create_substr_re(substr_list: Iterable[str]) -> re.Regex:
 
 
 class _ExceptionRewriter:
-
     def __init__(self, tsv: str) -> None:
         lines = tsv.splitlines()
         lines.pop(0)
@@ -90,7 +89,9 @@ class _ExceptionRewriter:
         rules.sort(key=itemgetter(1), reverse=True)
         re_str = "(" + "|".join(match for (match, _, _) in rules) + ")"
         self._re = re.compile(re_str)
-        self._orig2rewrite: Dict[str, str] = {orig: rewrite for (_, orig, rewrite) in rules}
+        self._orig2rewrite: Dict[str, str] = {
+            orig: rewrite for (_, orig, rewrite) in rules
+        }
 
     @lru_cache()
     def sub(self, string: str) -> str:
@@ -122,12 +123,16 @@ PHONES = _load_phones(
     DIR.with_name("phones.tsv").read_text(encoding="utf-8")  # pylint: disable=E1101
 )
 SUBSTR2PHONES = _load_substr2phones(
-    DIR.with_name("substr2phones.tsv").read_text(encoding="utf-8"),  # pylint: disable=E1101
-    PHONES
+    DIR.with_name("substr2phones.tsv").read_text(
+        encoding="utf-8"
+    ),  # pylint: disable=E1101
+    PHONES,
 )
 DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
-    DIR.with_name("voicing_pairs.tsv").read_text(encoding="utf-8"),  # pylint: disable=E1101
-    PHONES
+    DIR.with_name("voicing_pairs.tsv").read_text(
+        encoding="utf-8"
+    ),  # pylint: disable=E1101
+    PHONES,
 )
 SUBSTR_RE = _create_substr_re(SUBSTR2PHONES.keys())
 REWRITER = _ExceptionRewriter(
@@ -139,7 +144,6 @@ REWRITER = _ExceptionRewriter(
 
 
 class Phone:
-
     def __init__(self, value: str, *, word_boundary: bool = False) -> None:
         self.value: str = value
         self.word_boundary = word_boundary
@@ -164,7 +168,9 @@ class ProsodicUnit:
         self.orthographic = orthographic
         self._phonetic: Optional[List[Phone]] = None
 
-    def phonetic(self, *, alphabet: str = "SAMPA", hiatus=False) -> List[Tuple[str, ...]]:
+    def phonetic(
+        self, *, alphabet: str = "SAMPA", hiatus=False
+    ) -> List[Tuple[str, ...]]:
         """Phonetic transcription of ProsodicUnit."""
         if self._phonetic is None:
             t = self._str2phones(self.orthographic)
@@ -233,7 +239,7 @@ class ProsodicUnit:
         output = []
         for i, ph in enumerate(input_):
             try:
-                next_ph = input_[i+1]
+                next_ph = input_[i + 1]
             except IndexError:
                 next_ph = EMPTY_PHONE
             # assimilation of place for nasals
@@ -250,12 +256,18 @@ class ProsodicUnit:
                 continue
             output.append(ph)
             # optionally add transient /j/ between high front vowel and subsequent vowel
-            if hiatus and re.match("[Ii]", ph.value) and re.match("[aEIoui]", next_ph.value):
+            if (
+                hiatus
+                and re.match("[Ii]", ph.value)
+                and re.match("[aEIoui]", next_ph.value)
+            ):
                 output.append(Phone("j"))
         return output
 
     @staticmethod
-    def _split_words_and_translate(input_: List[Phone], alphabet) -> List[Tuple[str, ...]]:
+    def _split_words_and_translate(
+        input_: List[Phone], alphabet
+    ) -> List[Tuple[str, ...]]:
         output = []
         word = []
         alphabet = alphabet.lower()
@@ -268,8 +280,7 @@ class ProsodicUnit:
 
 
 def _separate_tokens(
-    tokens: List[str],
-    prosodic_boundary_symbols: Set[str]
+    tokens: List[str], prosodic_boundary_symbols: Set[str]
 ) -> Tuple[List[Optional[str]], List[str]]:
     """Separate tokens for transcription from those that will be left as is.
 
@@ -306,7 +317,7 @@ def transcribe(
     *,
     alphabet="sampa",
     hiatus=False,
-    prosodic_boundary_symbols=set()
+    prosodic_boundary_symbols=set(),
 ) -> List[Union[str, Tuple[str, ...]]]:
     """Phonetically transcribe ``phrase``.
 
@@ -354,7 +365,4 @@ def transcribe(
         ) from e
     matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
     transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
-    return [
-        m if m is not None else transcribed.pop(0)  # type: ignore
-        for m in matrix
-    ]
+    return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore
