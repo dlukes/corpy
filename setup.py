@@ -8,8 +8,8 @@ setup(
     description="Tools for processing language data.",
     license="GNU GPLv3",
     url="https://github.com/dlukes/corpy",
-
     packages=find_packages(),
+    include_package_data=True,
     python_requires=">=3.6",
     install_requires=[
         "click",
@@ -23,5 +23,5 @@ setup(
         [console_scripts]
         xc=corpy.scripts.xc:main
         zip-verticals=corpy.scripts.zip_verticals:main
-    """
+    """,
 )
