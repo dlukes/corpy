@@ -249,9 +249,14 @@ class ProsodicUnit:
                 ph.value = "N"
             elif ph.value == "m" and next_ph.value in ("f", "v"):
                 ph.value = "F"
-            # no gemination (except for short vowels)
-            # cf. remove duplicate graphemes above for the orthographic counterpart of this rule
-            elif ph.value == next_ph.value and ph.value not in "aEIou":
+            # no gemination (except across word boundaries and for short
+            # vowels); cf. remove duplicate graphemes above for the
+            # orthographic counterpart of this rule
+            elif (
+                ph.value == next_ph.value
+                and ph.value not in "aEIou"
+                and not ph.word_boundary
+            ):
                 continue
             # drop CSP-blocking pseudophones (they've done their job by now)
             elif ph.value == "-":
