@@ -205,8 +205,10 @@ class ProsodicUnit:
                 substr = match.group()
                 try:
                     phones = SUBSTR2PHONES[substr]
-                except KeyError:
-                    raise ValueError(f"Unexpected substring in input: {substr!r}")
+                except KeyError as e:
+                    raise ValueError(
+                        f"Unexpected substring in input: {substr!r}"
+                    ) from e
                 output.extend(Phone(ph) for ph in phones)
             output[-1].word_boundary = True
         return output
