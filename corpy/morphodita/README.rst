@@ -12,7 +12,7 @@ wrapper around the default Swig-generated Python bindings for the `MorphoDiTa
 <https://github.com/ufal/morphodita>`_ morphological tagging and lemmatization
 framework.
 
-The target audience are:
+The target audiences are:
 
 - beginner programmers interested in NLP
 - seasoned programmers who want to use MorphoDiTa through a more Pythonic
@@ -22,13 +22,13 @@ The target audience are:
   and who are not too worried about a possible performance hit as compared with
   full manual control
 
-Pre-trained tagging models which can be used with (Py)MorphoDiTa can be found
+Pre-trained tagging models which can be used with MorphoDiTa can be found
 `here <http://ufal.mff.cuni.cz/morphodita#language_models>`_. Currently, Czech
 and English models are available. **Please respect their CC BY-NC-SA 3.0
 license!**
 
 At the moment, only a subset of the functionality offered by the MorphoDiTa API
-is available through PyMorphoDiTa (tagging features).
+is available through ``corpy.morphodita`` (tokenization, tagging).
 
 Usage
 =====
@@ -44,7 +44,7 @@ In addition to tokenization, the MorphoDiTa tokenizers perform sentence
 splitting at the same time.
 
 The easiest way to get started is to import one of the following
-pre-instantiated tokenizers from ``pymorphodita.tokenizer``: ``vertical``,
+pre-instantiated tokenizers from ``corpy.morphodita.tokenizer``: ``vertical``,
 ``czech``, ``english`` or ``generic``, and use it like so:
 
 .. code:: python

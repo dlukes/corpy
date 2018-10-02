@@ -5,7 +5,7 @@ In addition to tokenization, the MorphoDiTa tokenizers perform sentence splittin
 The easiest way to get started is to import one of the following pre-instantiated tokenizers:
 ``vertical``, ``czech``, ``english`` or ``generic``, and use it like so:
 
->>> from pymorphodita.tokenizer import generic
+>>> from corpy.morphodita.tokenizer import generic
 >>> for sentence in generic.tokenize("foo bar baz"):
 ...     print(sentence)
 ...
@@ -14,7 +14,7 @@ The easiest way to get started is to import one of the following pre-instantiate
 If you want more flexibility, e.g. for tokenizing several in texts in parallel with the same type of
 tokenizer, then create your own objects (each tokenizer can only be tokenizing one text at a time!):
 
->>> from pymorphodita.tokenizer import Tokenizer
+>>> from corpy.morphodita.tokenizer import Tokenizer
 >>> my_tokenizer1 = Tokenizer("generic")
 >>> my_tokenizer2 = Tokenizer("generic")
 
@@ -39,6 +39,7 @@ class Tokenizer:
     details.
 
     """
+
     def __init__(self, tokenizer_type):
         """Create a new tokenizer instance.
 
@@ -128,7 +129,8 @@ class Tokenizer:
         # passed...
         if not isinstance(text, str):
             raise TypeError(
-                "``text`` should be a str, you passed in {}.".format(type(text)))
+                "``text`` should be a str, you passed in {}.".format(type(text))
+            )
         self._tokenizer.setText(text)
         while self._tokenizer.nextSentence(self._forms, self._tokens):
             yield list(self._forms)
