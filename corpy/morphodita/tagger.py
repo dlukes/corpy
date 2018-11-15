@@ -14,10 +14,15 @@ class Tagger:
     set of tagging models.
 
     """
-    _NO_TOKENIZER = ("No tokenizer defined for tagger {!r}! Please provide "
-                     "pre-tokenized and sentence-split input.")
-    _TEXT_REQS = ("Please provide a string or an iterable of iterables (not "
-                  "strings!) of strings as the ``text`` parameter.")
+
+    _NO_TOKENIZER = (
+        "No tokenizer defined for tagger {!r}! Please provide "
+        "pre-tokenized and sentence-split input."
+    )
+    _TEXT_REQS = (
+        "Please provide a string or an iterable of iterables (not "
+        "strings!) of strings as the ``text`` parameter."
+    )
 
     def __init__(self, tagger):
         """Create a ``Tagger`` object.
@@ -58,13 +63,21 @@ class Tagger:
     @lru_cache(maxsize=16)
     def _get_converter(self, convert):
         try:
-            converter = (getattr(self, "_" + convert + "_converter")
-                         if convert is not None else None)
+            converter = (
+                getattr(self, "_" + convert + "_converter")
+                if convert is not None
+                else None
+            )
         except AttributeError as e:
-            converters = [a[1:-10] for a in dir(self) if "converter" in a
-                          and a != "_get_converter"]
-            raise ValueError("Unknown converter {!r}. Available converters: "
-                             "{!r}.".format(convert, converters)) from e
+            converters = [
+                a[1:-10]
+                for a in dir(self)
+                if "converter" in a and a != "_get_converter"
+            ]
+            raise ValueError(
+                "Unknown converter {!r}. Available converters: "
+                "{!r}.".format(convert, converters)
+            ) from e
         return converter
 
     def tag(self, text, sents=False, guesser=False, convert=None):
@@ -151,11 +164,16 @@ class Tagger:
             if isinstance(sent, str) or not isinstance(sent, Iterable):
                 raise TypeError(self._TEXT_REQS)
             yield from self._tag(
-                "\n".join(sent), self._vtokenizer, sents, guesser, converter)
+                "\n".join(sent), self._vtokenizer, sents, guesser, converter
+            )
 
     def _tag(self, text, tokenizer, sents, guesser, converter):
-        tagger, forms, lemmas, tokens = (self._tagger, self._forms,
-                                         self._lemmas, self._tokens)
+        tagger, forms, lemmas, tokens = (
+            self._tagger,
+            self._forms,
+            self._lemmas,
+            self._tokens,
+        )
         tokenizer.setText(text)
         while tokenizer.nextSentence(forms, tokens):
             tagger.tag(forms, lemmas, guesser)

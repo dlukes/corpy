@@ -28,6 +28,7 @@ class Vertical:
     :attr:`posattrs`.
 
     """
+
     struct_names = []
     posattrs = []
 
@@ -41,7 +42,9 @@ class Vertical:
             raise Exception(f"File {path!r} does not exist!")
         self.path = path
         self._struct_re = re.compile(
-            r"<\s*?(/?)\s*?({})(?:\s*?(/?)\s*?| (.*?))>".format("|".join(self.struct_names))
+            r"<\s*?(/?)\s*?({})(?:\s*?(/?)\s*?| (.*?))>".format(
+                "|".join(self.struct_names)
+            )
         )
         self.position_template = namedtuple("Position", self.posattrs)
         # if an integer > 0, then modulo for reporting progress; if falsey, then turns off reporting
@@ -71,13 +74,15 @@ class Vertical:
                     else:
                         # TODO: figure out a way to allow nested tags...?
                         if tag in self.sattrs:
-                            raise Exception(f"{tag!r} already in `sattrs`; nested tags?")
+                            raise Exception(
+                                f"{tag!r} already in `sattrs`; nested tags?"
+                            )
                         if parse_sattrs:
                             attrs = {
                                 m.group(1): m.group(2)
                                 for m in re.finditer(
-                                        r'\s*?(\S+?)="([^"]*?)"',
-                                        "" if attrs is None else attrs
+                                    r'\s*?(\S+?)="([^"]*?)"',
+                                    "" if attrs is None else attrs,
                                 )
                             }
                         self.sattrs[tag] = attrs
@@ -114,8 +119,20 @@ class Vertical:
 class Syn2015Vertical(Vertical):
     struct_names = ["doc", "text", "p", "s", "hi", "lb"]
     posattrs = [
-        "word", "lemma", "tag", "proc", "afun", "parent", "eparent", "prep", "p_lemma", "p_tag",
-        "p_afun", "ep_lemma", "ep_tag", "ep_afun"
+        "word",
+        "lemma",
+        "tag",
+        "proc",
+        "afun",
+        "parent",
+        "eparent",
+        "prep",
+        "p_lemma",
+        "p_tag",
+        "p_afun",
+        "ep_lemma",
+        "ep_tag",
+        "ep_afun",
     ]
 
     def open(self):

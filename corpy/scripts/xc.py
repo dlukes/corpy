@@ -10,8 +10,12 @@ from lxml import etree
 
 NAME = osp.splitext(osp.basename(__file__))[0]
 LOG = log.getLogger(NAME)
-LOGLEVELS = [s for f, s in sorted(
-    (v, k) for k, v in vars(log).items() if k.isupper() and isinstance(v, int))]
+LOGLEVELS = [
+    s
+    for f, s in sorted(
+        (v, k) for k, v in vars(log).items() if k.isupper() and isinstance(v, int)
+    )
+]
 NORM_FORMS = ("NFC", "NFD", "NFKC", "NFKD")
 
 
@@ -24,8 +28,10 @@ def check_normalization(fdist, expected_form="NFC"):
     for extended_grapheme_cluster in fdist.keys():
         normalized = ud.normalize(expected_form, extended_grapheme_cluster)
         if extended_grapheme_cluster != normalized:
-            LOG.warn(f"Expected {normalized!r} according to {expected_form}, got "
-                     f"{extended_grapheme_cluster!r} instead!")
+            LOG.warn(
+                f"Expected {normalized!r} according to {expected_form}, got "
+                f"{extended_grapheme_cluster!r} instead!"
+            )
 
 
 def parse(file, xml=False):
@@ -52,12 +58,25 @@ def print_fdist(fdist):
 
 
 @cli.command()
-@cli.option("--expected-normalization", help="Warn if identified extended grapheme clusters do not "
-            "match expected normalization form.", type=cli.Choice(NORM_FORMS))
+@cli.option(
+    "--expected-normalization",
+    help="Warn if identified extended grapheme clusters do not "
+    "match expected normalization form.",
+    type=cli.Choice(NORM_FORMS),
+)
 @cli.option("--lower", help="Convert to lowercase before processing.", is_flag=True)
-@cli.option("--xml", help="Parse input as XML and process only text nodes and attribute values.",
-            is_flag=True)
-@cli.option("lvl", "--log", help="Set logging level.", type=cli.Choice(LOGLEVELS), default="WARN")
+@cli.option(
+    "--xml",
+    help="Parse input as XML and process only text nodes and attribute values.",
+    is_flag=True,
+)
+@cli.option(
+    "lvl",
+    "--log",
+    help="Set logging level.",
+    type=cli.Choice(LOGLEVELS),
+    default="WARN",
+)
 @cli.option("--verbose", "-v", help="(Repeatedly) increase logging level.", count=True)
 @cli.option("--quiet", "-q", help="(Repeatedly) decrease logging level.", count=True)
 @cli.argument("files", type=cli.File("rt", encoding="utf-8"), nargs=-1)
@@ -69,8 +88,10 @@ def main(expected_normalization, lower, xml, lvl, verbose, quiet, files):
     FILES are the files to process. Leave empty or - for STDIN.
 
     """
-    lvl = getattr(log, lvl) - 10*verbose + 10*quiet
-    log.basicConfig(level=lvl, format="[%(asctime)s {}:%(levelname)s] %(message)s".format(NAME))
+    lvl = getattr(log, lvl) - 10 * verbose + 10 * quiet
+    log.basicConfig(
+        level=lvl, format="[%(asctime)s {}:%(levelname)s] %(message)s".format(NAME)
+    )
     files = files if files else (cli.File("rt", encoding="utf-8")("-"),)
     fdist = Counter()
     LOG.info("Aggregating counts of extended grapheme clusters in input.")
