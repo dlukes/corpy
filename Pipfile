@@ -3,8 +3,6 @@ url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-[packages]
-
 [dev-packages]
 corpy = {path = ".", editable = true}
 ipdb = "*"
@@ -14,8 +12,8 @@ pylint = "*"
 mypy = "*"
 "flake8" = "*"
 "doc8" = "*"
-yapf = "*"
 rope = "*"
+black = "*"
 
-[requires]
-python_version = "3.6"
+[pipenv]
+allow_prereleases = true

@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="corpy",
-    version="dev",
+    version="0.0",
     author="David Lukeš",
     author_email="dafydd.lukes@gmail.com",
     description="Tools for processing language data.",
@@ -15,9 +15,11 @@ setup(
         "click",
         "lazy",
         "lxml",
+        "matplotlib",
         "numpy",
         "regex",
         "ufal.morphodita (>=1.9)",
+        "wordcloud",
     ],
     entry_points="""
         [console_scripts]
