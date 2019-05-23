@@ -22,6 +22,17 @@ click = "^7.0"
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.0"
 pytest = "^4.5"
+# python linters
+flake8 = "^3.7"
+pylint = "^2.3"
+pydocstyle = "^3.0"
+mypy = "^0.701.0"
+# auto-formatting
+black = {version = "*", allows-prereleases = true}
+# refactoring
+rope = "^0.14.0"
+# rst linter
+doc8 = "^0.8.0"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"
