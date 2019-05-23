@@ -52,8 +52,10 @@ def main(lvl, verbose, quiet, files):
         level=lvl, format="[%(asctime)s {}:%(levelname)s] %(message)s".format(NAME)
     )
     files = files if files else (cli.File("rt", encoding="utf-8")("-"),)
+    LOG.info(f"Zipping the following vertical files: {files}")
     for line_no, lines in enumerate(zip(*files)):
         if any("\t" in l for l in lines):
             print_position(lines, line_no)
         else:
             print(lines[0].strip(" \n"))
+    LOG.info("Done.")

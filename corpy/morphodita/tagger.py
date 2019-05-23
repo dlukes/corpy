@@ -181,7 +181,7 @@ class Tagger:
             for i in range(len(lemmas)):
                 lemma = lemmas[i]
                 t = tokens[i]
-                word = text[t.start : t.start + t.length]
+                word = text[t.start : t.start + t.length]  # noqa: E203
                 if converter is not None:
                     converter.convert(lemma)
                 token = Token(word, lemma.lemma, lemma.tag)

@@ -6,6 +6,7 @@
 import sys
 import gzip
 import os.path as osp
+from typing import List
 
 import re
 import datetime as dt
@@ -29,8 +30,8 @@ class Vertical:
 
     """
 
-    struct_names = []
-    posattrs = []
+    struct_names: List[str] = []
+    posattrs: List[str] = []
 
     def __init__(self, path):
         if not (self.struct_names and self.posattrs):
