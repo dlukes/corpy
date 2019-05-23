@@ -1,10 +1,14 @@
 [tool.poetry]
 name = "corpy"
-version = "0.1.1"
+version = "0.1.2"
 description = "Tools for processing language data."
+
 authors = ["David Lukes <dafydd.lukes@gmail.com>"]
 license = "GPL-3.0+"
+
 repository = "https://github.com/dlukes/corpy"
+readme = "README.rst"
+keywords = ["corpus", "linguistics", "NLP"]
 
 include = ["corpy/phonetics/*.tsv"]
 
@@ -33,6 +37,7 @@ black = {version = "*", allows-prereleases = true}
 rope = "^0.14.0"
 # rst linter
 doc8 = "^0.8.0"
+twine = "^1.13"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"
