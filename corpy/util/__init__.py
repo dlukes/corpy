@@ -36,7 +36,7 @@ def head(collection, n=None):
 
 def cmp(lhs, rhs, test="__eq__"):
     """Wrap assert statement to automatically raise an informative error."""
-    msg = f"{glimpse(lhs)} {test} {glimpse(rhs)} is not True!"
+    msg = f"{head(lhs)} {test} {head(rhs)} is not True!"
     ans = getattr(lhs, test)(rhs)
     # operators automatically fall back to identity comparison if the
     # comparison is not implemented for the given types, magic methods don't →
