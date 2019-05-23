@@ -23,7 +23,7 @@ def print_position(lines, line_no):
             "represent the same corpus?"
         )
         position.extend(line[1:])
-    print("\t".join(line))
+    print("\t".join(position))
 
 
 @cli.command()
