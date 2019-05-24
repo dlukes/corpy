@@ -49,8 +49,9 @@ pre-instantiated tokenizers from ``corpy.morphodita.tokenizer``: ``vertical``,
 
 .. code:: python
 
-   >>> from corpy.morphodita.tokenizer import generic
-   >>> for sentence in generic.tokenize("foo bar baz"):
+   >>> from corpy.morphodita import Tokenizer
+   >>> t = Tokenizer("generic")
+   >>> for sentence in t.tokenize("foo bar baz"):
    ...     print(sentence)
    ...
    ['foo', 'bar', 'baz']

@@ -1,17 +1,24 @@
-from . import log
+"""An interface to MorphoDiTa taggers.
 
+TODO
+
+"""
 from collections import namedtuple
 from collections.abc import Iterable
 from lazy import lazy
 from functools import lru_cache
+
 import ufal.morphodita as ufal
+
+from . import LOG
+from .util import generator_with_shared_state
 
 Token = namedtuple("Token", "word lemma tag")
 
 
 class Tagger:
-    """A MorphoDiTa morphological tagger and lemmatizer associated with particular
-    set of tagging models.
+    """A MorphoDiTa morphological tagger and lemmatizer associated
+    with a particular set of tagging models.
 
     """
 
@@ -32,7 +39,7 @@ class Tagger:
 
         """
         self._tpath = tagger
-        log.info("Loading tagger.")
+        LOG.info("Loading tagger.")
         self._tagger = ufal.Tagger.load(tagger)
         if self._tagger is None:
             raise RuntimeError("Unable to load tagger from {!r}!".format(tagger))
@@ -42,7 +49,7 @@ class Tagger:
         self._tokens = ufal.TokenRanges()
         self._tokenizer = self._tagger.newTokenizer()
         if self._tokenizer is None:
-            log.warning(self._NO_TOKENIZER.format(tagger))
+            LOG.warning(self._NO_TOKENIZER.format(tagger))
 
     @lazy
     def _vtokenizer(self):
@@ -68,7 +75,7 @@ class Tagger:
                 if convert is not None
                 else None
             )
-        except AttributeError as e:
+        except AttributeError as err:
             converters = [
                 a[1:-10]
                 for a in dir(self)
@@ -77,30 +84,36 @@ class Tagger:
             raise ValueError(
                 "Unknown converter {!r}. Available converters: "
                 "{!r}.".format(convert, converters)
-            ) from e
+            ) from err
         return converter
 
     def tag(self, text, sents=False, guesser=False, convert=None):
         """Perform morphological tagging and lemmatization on text.
 
-        If ``text`` is a string, sentence-split, tokenize and tag that string.
-        If it's an iterable of iterables (typically a list of lists), then take
-        each nested iterable as a separate sentence and tag it, honoring the
-        provided sentence boundaries and tokenization.
+        If ``text`` is a string, sentence-split, tokenize and tag that
+        string. If it's an iterable of iterables (typically a list of lists),
+        then take each nested iterable as a separate sentence and tag it,
+        honoring the provided sentence boundaries and tokenization.
+
+        The method returns a generator and the underlying tagger is shared by
+        all such generators, so if you try to start tagging a new text before
+        you've exhausted the generator for a previous one, a ``RuntimeError``
+        will be raised. If you want to tag in parallel, create multiple
+        taggers.
 
         :param text: Input text.
-        :type text: Either str (tokenization is left to the tagger) or iterable
-        of iterables (of str), representing individual sentences.
+        :type text: Either str (tokenization is left to the tagger) or
+        iterable of iterables (of str), representing individual sentences.
         :param sents: Whether to signal sentence boundaries by outputting a
         sequence of lists (sentences).
         :type sents: bool
-        :param guesser: Whether to use the morphological guesser provided with
-        the tagger (if available).
+        :param guesser: Whether to use the morphological guesser provided
+        with the tagger (if available).
         :type guesser: bool
         :param convert: Conversion strategy to apply to lemmas and / or tags
         before outputting them.
-        :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment" or
-        "strip_lemma_id", or None if no conversion is required
+        :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment"
+        or "strip_lemma_id", or None if no conversion is required
 
         >>> import pytest
         >>> pytest.skip("example not tested")
@@ -168,6 +181,7 @@ class Tagger:
                 "\n".join(sent), self._vtokenizer, sents, guesser, converter
             )
 
+    @generator_with_shared_state
     def _tag(self, text, tokenizer, sents, guesser, converter):
         tagger, forms, lemmas, tokens = (
             self._tagger,
@@ -178,17 +192,17 @@ class Tagger:
         tokenizer.setText(text)
         while tokenizer.nextSentence(forms, tokens):
             tagger.tag(forms, lemmas, guesser)
-            s = []
+            sent = []
             for i in range(len(lemmas)):
                 lemma = lemmas[i]
-                t = tokens[i]
-                word = text[t.start : t.start + t.length]  # noqa: E203
+                tok = tokens[i]
+                word = text[tok.start : tok.start + tok.length]  # noqa: E203
                 if converter is not None:
                     converter.convert(lemma)
                 token = Token(word, lemma.lemma, lemma.tag)
                 if sents:
-                    s.append(token)
+                    sent.append(token)
                 else:
                     yield token
             if sents:
-                yield s
+                yield sent

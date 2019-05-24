@@ -1,31 +1,35 @@
 """An interface to MorphoDiTa tokenizers.
 
-In addition to tokenization, the MorphoDiTa tokenizers perform sentence splitting at the same time.
+In addition to tokenization, the MorphoDiTa tokenizers perform sentence
+splitting at the same time.
 
-The easiest way to get started is to import one of the following pre-instantiated tokenizers:
-``vertical``, ``czech``, ``english`` or ``generic``, and use it like so:
-
->>> from corpy.morphodita.tokenizer import generic
->>> for sentence in generic.tokenize("foo bar baz"):
+>>> from corpy.morphodita import Tokenizer
+>>> t = Tokenizer("generic")
+>>> for sentence in t.tokenize("foo bar baz"):
 ...     print(sentence)
 ...
 ['foo', 'bar', 'baz']
 
-If you want more flexibility, e.g. for tokenizing several in texts in parallel with the same type of
-tokenizer, then create your own objects (each tokenizer can only be tokenizing one text at a time!):
+Four different tokenizer flavors are available in MorphoDiTa, which you
+specify as the first string argument to the ``Tokenizer`` constructor:
 
->>> from corpy.morphodita.tokenizer import Tokenizer
->>> my_tokenizer1 = Tokenizer("generic")
->>> my_tokenizer2 = Tokenizer("generic")
+- ``vertical``: a simple tokenizer for the vertical format, which is
+  effectively already tokenized (one word per line)
+- ``czech``: a tokenizer tuned for Czech
+- ``english``: a tokenizer tuned for English
+- ``generic``: a generic tokenizer
+
+If you want to tokenize multiple texts in parallel, create multiple tokenizer
+objects, as each tokenizer can only be tokenizing one text at a time.
 
 """
 import ufal.morphodita as ufal
 
+from .util import generator_with_shared_state
+
 
 class Tokenizer:
     """A wrapper API around the tokenizers offered by MorphoDiTa.
-
-    Usage:
 
     >>> t = Tokenizer("generic")
     >>> for sentence in t.tokenize("foo bar baz"):
@@ -33,9 +37,11 @@ class Tokenizer:
     ...
     ['foo', 'bar', 'baz']
 
-    Available tokenizers (specified by the first parameter to the ``Tokenizer()`` constructor):
-    "vertical", "czech", "english", "generic". See the ``new*`` static methods on the MorphoDiTa
-    ``tokenizer`` class described at https://ufal.mff.cuni.cz/morphodita/api-reference#tokenizer for
+    Available tokenizers (specified by the first parameter to the
+    ``Tokenizer()`` constructor): "vertical", "czech", "english",
+    "generic". See the ``new*`` static methods on the MorphoDiTa
+    ``tokenizer`` class described at
+    https://ufal.mff.cuni.cz/morphodita/api-reference#tokenizer for
     details.
 
     """
@@ -54,42 +60,20 @@ class Tokenizer:
         self._forms = ufal.Forms()
         self._tokens = ufal.TokenRanges()
 
+    @generator_with_shared_state
     def tokenize(self, text):
         """Tokenize ``text``.
 
         :param text: Text to tokenize.
         :type text: str
 
-        The method returns a generator of sentences as lists of strings. The underlying tokenizer
-        object is shared by all such generators, which means this probably doesn't do what you want
-        it to:
+        The method returns a generator of sentences as lists of strings. The
+        underlying tokenizer is shared by all such generators, so if you try
+        to start tokenizing a new text before you've exhausted the generator
+        for a previous one, a ``RuntimeError`` will be raised.
 
-        >>> t = Tokenizer("generic")
-        >>> toks1 = t.tokenize("Foo bar baz. Bar baz qux.")
-        >>> toks2 = t.tokenize("A b c. D e f. G h i.")
-        >>> for s1, s2 in zip(toks1, toks2):
-        ...     for t1, t2 in zip(s1, s2):
-        ...         print(t1, t2)
-        Foo A
-        bar b
-        baz c
-        . .
-        D G
-        e h
-        f i
-        . .
-
-        What happens in the ``zip()`` call is that the underlying tokenizer's text is first set to
-        ``"Foo bar baz. Bar baz qux."``, and the sentence ``['Foo', 'bar', 'baz', '.']`` is yielded
-        by ``toks1``. Then it is set to ``"A b c. D e f."`` and ``['A', 'b', 'c', '.']`` is yielded
-        by ``toks2``. These two values are zipped and bound to ``(s1, s2)`` in the first iteration
-        of the outer for-loop. From this point on, the text doesn't change anymore (we're in the
-        loop yielding individual sentences), so **toks1** (now using the same text as ``toks2``)
-        yields ``['D', 'e', 'f', '.']`` and **toks2** the last ``['G', 'h', 'i', '.']``. These
-        become ``(s1, s2)`` in the second and final iteration of the for-loop, because after this,
-        both ``toks1`` and ``toks2`` (since they ended up with the same text) are exhausted.
-
-        For the use case above, either create multiple tokenizers:
+        If you want to tokenize in parallel, either create multiple
+        tokenizers:
 
         >>> t1 = Tokenizer("generic")
         >>> t2 = Tokenizer("generic")
@@ -134,9 +118,3 @@ class Tokenizer:
         self._tokenizer.setText(text)
         while self._tokenizer.nextSentence(self._forms, self._tokens):
             yield list(self._forms)
-
-
-vertical = Tokenizer("vertical")
-czech = Tokenizer("czech")
-english = Tokenizer("english")
-generic = Tokenizer("generic")
