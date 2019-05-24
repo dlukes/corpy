@@ -66,6 +66,8 @@ Initialize a new tagger:
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> from corpy.morphodita import Tagger
    >>> t = Tagger("path/to/czech-morfflex-pdt-160310.tagger")
 
@@ -73,6 +75,8 @@ Sentence split, tokenize, tag and lemmatize a text represented as a string:
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> list(t.tag("Je zima. Bude sněžit."))
    [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
     Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
@@ -93,6 +97,8 @@ represented as an iterable of iterables of strings:
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> list(t.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
    [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
     Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),

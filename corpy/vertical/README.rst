@@ -23,6 +23,8 @@ risking errors from hand-coding this logic every time you need it.
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> from corpy.vertical import Syn2015Vertical
    >>> from pprint import pprint
    >>> v = Syn2015Vertical("path/to/syn2015.gz")
@@ -110,6 +112,8 @@ different types of frequencies.
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> from corpy.vertical import Syn2015Vertical, ipm, arf
    >>> v = Syn2015Vertical("path/to/syn2015.gz")
    >>> # log progress every 50M positions
@@ -134,6 +138,8 @@ bug.
 
 .. code:: python
 
+   >>> import pytest
+   >>> pytest.skip("example not tested")
    >>> # absolute frequency
    >>> len(index[("NOV: próza", "plíseň")])
    211

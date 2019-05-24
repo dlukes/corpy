@@ -102,6 +102,9 @@ class Tagger:
         :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment" or
         "strip_lemma_id", or None if no conversion is required
 
+        >>> import pytest
+        >>> pytest.skip("example not tested")
+        >>> t = Tagger("path/to/czech-morfflex-pdt-160310.tagger")
         >>> list(t.tag("Je zima. Bude sněžit."))
         [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
@@ -109,7 +112,6 @@ class Tagger:
          Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
          Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
          Token(word='.', lemma='.', tag='Z:-------------')]
-
         >>> list(t.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
         [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
@@ -117,7 +119,6 @@ class Tagger:
          Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
          Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
          Token(word='.', lemma='.', tag='Z:-------------')]
-
         >>> list(t.tag("Je zima. Bude sněžit.", sents=True))
         [[Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
           Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
