@@ -42,7 +42,7 @@ class Tagger:
         self._tokens = ufal.TokenRanges()
         self._tokenizer = self._tagger.newTokenizer()
         if self._tokenizer is None:
-            log.warn(self._NO_TOKENIZER.format(tagger))
+            log.warning(self._NO_TOKENIZER.format(tagger))
 
     @lazy
     def _vtokenizer(self):

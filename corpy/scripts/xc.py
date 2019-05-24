@@ -28,7 +28,7 @@ def check_normalization(fdist, expected_form="NFC"):
     for extended_grapheme_cluster in fdist.keys():
         normalized = ud.normalize(expected_form, extended_grapheme_cluster)
         if extended_grapheme_cluster != normalized:
-            LOG.warn(
+            LOG.warning(
                 f"Expected {normalized!r} according to {expected_form}, got "
                 f"{extended_grapheme_cluster!r} instead!"
             )
