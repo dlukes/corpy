@@ -26,6 +26,7 @@ click = "^7.0"
 [tool.poetry.dev-dependencies]
 ipdb = "^0.12.0"
 pytest = "^4.5"
+pytest-xdist = "^1.28"
 # python linters
 flake8 = "^3.7"
 pylint = "^2.3"
