@@ -1,0 +1,41 @@
+# TODO: Eventually move this to pyproject.toml once pylint
+# implements support for configuration via [tool.*] tables in it.
+
+[MASTER]
+# auto-detect the number of processors available to use
+jobs=0
+unsafe-load-any-extension=yes
+
+[MESSAGES CONTROL]
+# START default pylint settings for Visual Studio Code, cf:
+# https://code.visualstudio.com/docs/python/linting
+disable=all
+enable=F,
+       E,
+       unreachable,
+       duplicate-key,
+       unnecessary-semicolon,
+       global-variable-not-assigned,
+       unused-variable,
+       binary-op-exception,
+       bad-format-string,
+       anomalous-backslash-in-string,
+       bad-open-mode,
+# END default pylint settings for Visual Studio Code
+       undefined-loop-variable,
+       blacklisted-name,
+       invalid-name,
+       missing-docstring,
+       deprecated-module,
+       deprecated-method
+
+[BASIC]
+# good variable names which should always be accepted
+good-names=i,
+           j,
+           k,
+           ex,
+           Run,
+           _,
+           x,
+           y
