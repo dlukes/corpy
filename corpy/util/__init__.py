@@ -1,27 +1,30 @@
+"""Small utility functions.
+
+"""
 from pprint import pprint
 
 
-def _head_gen(items, n):
+def _head_gen(items, first_n):
     for idx, item in enumerate(items):
-        if n == idx:
+        if first_n == idx:
             break
         yield item
 
 
-def head(collection, n=None):
+def head(collection, first_n=None):
     """Inspect collection, truncated if too long.
 
-    If n is None, an appropriate value is determined based on the type
-    of the collection.
+    If first_n is None, an appropriate value is determined based on
+    the type of the collection.
 
     """
     type_ = type(collection)
-    if n is None:
+    if first_n is None:
         if type_ in (str, bytes):
-            n = 100
+            first_n = 100
         else:
-            n = 10
-    if len(collection) <= n:
+            first_n = 10
+    if len(collection) <= first_n:
         pprint(collection)
         return
     if type_ == str:
@@ -31,7 +34,7 @@ def head(collection, n=None):
     else:
         constructor = type_
     items = collection.items() if hasattr(collection, "items") else collection
-    pprint(constructor(_head_gen(items, n)))
+    pprint(constructor(_head_gen(items, first_n)))
 
 
 def cmp(lhs, rhs, test="__eq__"):
