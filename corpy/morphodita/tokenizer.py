@@ -1,112 +1,81 @@
 """An interface to MorphoDiTa tokenizers.
 
-In addition to tokenization, the MorphoDiTa tokenizers perform sentence
-splitting at the same time.
-
->>> from corpy.morphodita import Tokenizer
->>> t = Tokenizer("generic")
->>> for sentence in t.tokenize("foo bar baz"):
-...     print(sentence)
-...
-['foo', 'bar', 'baz']
-
-Four different tokenizer flavors are available in MorphoDiTa, which you
-specify as the first string argument to the ``Tokenizer`` constructor:
-
-- ``vertical``: a simple tokenizer for the vertical format, which is
-  effectively already tokenized (one word per line)
-- ``czech``: a tokenizer tuned for Czech
-- ``english``: a tokenizer tuned for English
-- ``generic``: a generic tokenizer
-
-If you want to tokenize multiple texts in parallel, create multiple tokenizer
-objects, as each tokenizer can only be tokenizing one text at a time.
-
 """
 import ufal.morphodita as ufal
 
-from .util import generator_with_shared_state
+from . import LOG
 
 
 class Tokenizer:
     """A wrapper API around the tokenizers offered by MorphoDiTa.
 
-    >>> t = Tokenizer("generic")
-    >>> for sentence in t.tokenize("foo bar baz"):
-    ...     print(sentence)
-    ...
-    ['foo', 'bar', 'baz']
+    :param tokenizer_type: Type of the requested tokenizer (cf. below for
+                           possible values).
+    :type tokenizer_type: str
 
-    Available tokenizers (specified by the first parameter to the
-    ``Tokenizer()`` constructor): "vertical", "czech", "english",
-    "generic". See the ``new*`` static methods on the MorphoDiTa
-    ``tokenizer`` class described at
-    https://ufal.mff.cuni.cz/morphodita/api-reference#tokenizer for
-    details.
+    `tokenizer_type` is typically one of:
+
+    - ``"czech"``: a tokenizer tuned for Czech
+    - ``"english"``: a tokenizer tuned for English
+    - ``"generic"``: a generic tokenizer
+    - ``"vertical"``: a simple tokenizer for the vertical format, which is
+      effectively already tokenized (one word per line)
+
+    Specifically, the available tokenizers are determined by the
+    ``new_*_tokenizer`` static methods on the MorphoDiTa ``tokenizer`` class
+    described in the `MorphoDiTa API reference
+    <https://ufal.mff.cuni.cz/morphodita/api-reference#tokenizer>`__.
 
     """
 
     def __init__(self, tokenizer_type):
-        """Create a new tokenizer instance.
+        constructor_name = "new" + tokenizer_type.capitalize() + "Tokenizer"
+        self._tokenizer_constructor = getattr(ufal.Tokenizer, constructor_name)
 
-        :param tokenizer_type: Type of the requested tokenizer, depends on the tokenizer
-        constructors made available on the ``tokenizer`` class in MorphoDiTa. Typically one of
-        "vertical", "czech", "english" and "generic".
-        :type tokenizer_type: str
+    @staticmethod
+    def from_tagger(tagger_path):
+        """Load tokenizer associated with tagger file.
 
         """
-        constructor = "new" + tokenizer_type.capitalize() + "Tokenizer"
-        self._tokenizer = getattr(ufal.Tokenizer, constructor)()
-        self._forms = ufal.Forms()
-        self._tokens = ufal.TokenRanges()
+        self = Tokenizer("generic")
+        LOG.info("Loading tagger.")
+        tagger = ufal.Tagger.load(tagger_path)
+        self._tokenizer_constructor = tagger.newTokenizer
+        if self._tokenizer_constructor() is None:
+            raise RuntimeError(f"The tagger {tagger_path} has no associated tokenizer.")
+        return self
 
-    @generator_with_shared_state
-    def tokenize(self, text):
-        """Tokenize ``text``.
+    def tokenize(self, text, sents=False):
+        """Tokenize `text`.
 
         :param text: Text to tokenize.
         :type text: str
+        :param sents: Whether to signal sentence boundaries by outputting a
+                      sequence of lists (sentences).
+        :type sents: bool
+        :return: An iterator over the tokenized text, possibly grouped into
+                 sentences if ``sents=True``.
 
-        The method returns a generator of sentences as lists of strings. The
-        underlying tokenizer is shared by all such generators, so if you try
-        to start tokenizing a new text before you've exhausted the generator
-        for a previous one, a ``RuntimeError`` will be raised.
+        Note that MorphoDiTa performs both sentence splitting and tokenization
+        at the same time, but this method iterates over tokens without sentence
+        boundaries by default:
 
-        If you want to tokenize in parallel, either create multiple
-        tokenizers:
-
-        >>> t1 = Tokenizer("generic")
-        >>> t2 = Tokenizer("generic")
-        >>> toks1 = t1.tokenize("Foo bar baz. Bar baz qux.")
-        >>> toks2 = t2.tokenize("A b c. D e f. G h i.")
-        >>> for s1, s2 in zip(toks1, toks2):
-        ...     for t1, t2 in zip(s1, s2):
-        ...         print(t1, t2)
-        Foo A
-        bar b
-        baz c
-        . .
-        Bar D
-        baz e
-        qux f
-        . .
-
-        Or exhaust the generators and zip the resulting lists:
-
+        >>> from corpy.morphodita import Tokenizer
         >>> t = Tokenizer("generic")
-        >>> toks1 = list(t.tokenize("Foo bar baz. Bar baz qux."))
-        >>> toks2 = list(t.tokenize("A b c. D e f. G h i."))
-        >>> for s1, s2 in zip(toks1, toks2):
-        ...     for t1, t2 in zip(s1, s2):
-        ...         print(t1, t2)
-        Foo A
-        bar b
-        baz c
-        . .
-        Bar D
-        baz e
-        qux f
-        . .
+        >>> for word in t.tokenize("foo bar baz"):
+        ...     print(word)
+        ...
+        foo
+        bar
+        baz
+
+        If you want to iterate over sentences (lists of tokens), set
+        ``sents=True``:
+
+        >>> for sentence in t.tokenize("foo bar baz", sents=True):
+        ...     print(sentence)
+        ...
+        ['foo', 'bar', 'baz']
 
         """
         # this is more elegant than just segfaulting in the MorphoDiTa C++ library if None is
@@ -115,6 +84,12 @@ class Tokenizer:
             raise TypeError(
                 "``text`` should be a str, you passed in {}.".format(type(text))
             )
-        self._tokenizer.setText(text)
-        while self._tokenizer.nextSentence(self._forms, self._tokens):
-            yield list(self._forms)
+        forms = ufal.Forms()
+        token_ranges = ufal.TokenRanges()
+        tokenizer = self._tokenizer_constructor()
+        tokenizer.setText(text)
+        while tokenizer.nextSentence(forms, token_ranges):
+            if sents:
+                yield list(forms)
+            else:
+                yield from forms

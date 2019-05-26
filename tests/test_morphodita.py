@@ -1,65 +1,121 @@
 import pytest
 
-from corpy.morphodita import Tokenizer
-from corpy.morphodita.util import generator_with_shared_state
+from corpy.morphodita import Tokenizer, Tagger
+from corpy.morphodita.tagger import Token
+
+# ----------------------------- Tokenizer -----------------------------
 
 
-class TrickyCharSplitter:
-    """A class for testing the generator_with_shared_state decorator.
-
-    Using an integer (self.index) as shared state is stupid of course, in
-    practice, this will be an object which is necessary for the generator
-    to operate, has state, and is possibly expensive to create (e.g. a
-    tokenizer).
-
-    """
-
-    def chars(self, string):
-        """Yield chars in string one by one."""
-        self.index = 0
-        while self.index < len(string):
-            yield string[self.index]
-            self.index += 1
-
-
-def test_demonstrate_shared_state_generator_problem():
-    tcs = TrickyCharSplitter()
-    gen1 = tcs.chars("abc")
-    gen2 = tcs.chars("def")
-    assert next(gen1) == "a"
-    assert next(gen2) == "d"
-    assert next(gen2) == "e"
-    # the following makes sense if you know the implementation details of
-    # TrickyCharSplitter (both gen1 and gen2 share the same self.index)
-    # but it's unexpected and unfortunate from a user perspective
-    assert next(gen1) == "c"  # instead of "b", which would be expected here
-
-
-class SafeCharSplitter(TrickyCharSplitter):
-    @generator_with_shared_state
-    def chars(self, string):
-        yield from super().chars(string)
-
-
-def test_demonstrate_how_to_solve_shared_state_generator_problem():
-    scs = SafeCharSplitter()
-    gen1 = scs.chars("abc")
-    gen2 = scs.chars("def")
-    assert next(gen1) == "a"
-    # unlike with TrickyCharSplitter, this actually works as expected, and the
-    # user is warned that the previously created gen has been truncated...
-    assert next(gen2) == "d"
-    # ... i.e. it will yield no more elements:
-    assert list(gen1) == []
-    assert list(gen2) == ["e", "f"]
-
-
-def test_tokenizing_new_text_truncates_previous_one():
+def test_tokenize_simple():
     tokenizer = Tokenizer("generic")
-    gen1 = tokenizer.tokenize("foo bar baz")
-    next(gen1)
-    gen2 = tokenizer.tokenize("foo bar baz")
-    next(gen2)
-    # yielding once from gen2 should truncate gen1
+    words = tokenizer.tokenize("A b. C d.")
+    assert next(words) == "A"
+    assert next(words) == "b"
+    assert next(words) == "."
+    assert next(words) == "C"
+    assert next(words) == "d"
+    assert next(words) == "."
     with pytest.raises(StopIteration):
-        next(gen1)
+        next(words)
+
+
+def test_tokenize_with_sents():
+    tokenizer = Tokenizer("generic")
+    sents = tokenizer.tokenize("A b. C d.", True)
+    assert next(sents) == "A b .".split()
+    assert next(sents) == "C d .".split()
+    with pytest.raises(StopIteration):
+        next(sents)
+
+
+def test_tokenizer_from_tagger():
+    tokenizer = Tokenizer.from_tagger("./czech-morfflex-pdt-161115.tagger")
+    tokens = list(tokenizer.tokenize("Kočka leze dírou, pes oknem."))
+    assert tokens == "Kočka leze dírou , pes oknem .".split()
+
+
+def test_tokenize_two_strings_in_parallel_with_same_tokenizer():
+    # this didn't use to work; previously, the first generator was truncated
+    # after the second started to be yielded from, and even before that,
+    # unexpected and incorrect results were generated
+    tokenizer = Tokenizer("generic")
+    for sent1, sent2 in zip(
+        tokenizer.tokenize("a b c", True), tokenizer.tokenize("d e f", True)
+    ):
+        for tok1, tok2 in zip(sent1, sent2):
+            assert ord(tok1) + 3 == ord(tok2)
+
+
+def test_tokenize_two_strings_intermittently_with_same_tokenizer():
+    # ditto
+    tokenizer = Tokenizer("generic")
+    sents1 = tokenizer.tokenize("A b c. D e f.", True)
+    sents2 = tokenizer.tokenize("G h i. J k l.", True)
+    assert next(sents1) == "A b c .".split()
+    assert next(sents2) == "G h i .".split()
+    assert next(sents2) == "J k l .".split()
+    assert next(sents1) == "D e f .".split()
+
+
+# ----------------------------- Tagger -----------------------------
+
+
+def test_tagger_simple():
+    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tokens = list(tagger.tag("Kočka leze dírou, pes oknem."))
+    print(tokens)
+    assert tokens == [
+        Token(word="Kočka", lemma="kočka", tag="NNFS1-----A----"),
+        Token(word="leze", lemma="lézt", tag="VB-S---3P-AA---"),
+        Token(word="dírou", lemma="díra", tag="NNFS7-----A----"),
+        Token(word=",", lemma=",", tag="Z:-------------"),
+        Token(word="pes", lemma="pes_^(zvíře)", tag="NNMS1-----A----"),
+        Token(word="oknem", lemma="okno", tag="NNNS7-----A----"),
+        Token(word=".", lemma=".", tag="Z:-------------"),
+    ]
+
+
+def test_tagger_with_sents():
+    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tokens = list(tagger.tag("Kočka leze dírou. Pes oknem.", sents=True))
+    print(tokens)
+    assert tokens == [
+        [
+            Token(word="Kočka", lemma="kočka", tag="NNFS1-----A----"),
+            Token(word="leze", lemma="lézt", tag="VB-S---3P-AA---"),
+            Token(word="dírou", lemma="díra", tag="NNFS7-----A----"),
+            Token(word=".", lemma=".", tag="Z:-------------"),
+        ],
+        [
+            Token(word="Pes", lemma="pes_^(zvíře)", tag="NNMS1-----A----"),
+            Token(word="oknem", lemma="okno", tag="NNNS7-----A----"),
+            Token(word=".", lemma=".", tag="Z:-------------"),
+        ],
+    ]
+
+
+def test_tag_two_strings_in_parallel_with_same_tagger():
+    # this didn't use to work; previously, the first generator was truncated
+    # after the second started to be yielded from, and even before that,
+    # unexpected and incorrect results were generated
+    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tokens1 = []
+    tokens2 = []
+    iter1 = tagger.tag("Kočka leze dírou.")
+    iter2 = tagger.tag("Pes oknem.")
+    for tok1, tok2 in zip(iter1, iter2):
+        tokens1.append(tok1.word)
+        tokens2.append(tok2.word)
+    assert tokens1 == "Kočka leze dírou".split()
+    assert tokens2 == "Pes oknem .".split()
+
+
+def test_tag_two_strings_intermittently_with_same_tagger():
+    # ditto
+    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    iter1 = tagger.tag("Kočka leze dírou.")
+    iter2 = tagger.tag("Pes oknem.")
+    assert next(iter1).word == "Kočka"
+    assert next(iter2).word == "Pes"
+    assert next(iter2).word == "oknem"
+    assert next(iter1).word == "leze"

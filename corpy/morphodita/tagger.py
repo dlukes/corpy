@@ -1,7 +1,5 @@
 """An interface to MorphoDiTa taggers.
 
-TODO
-
 """
 from collections import namedtuple
 from collections.abc import Iterable
@@ -11,14 +9,15 @@ from functools import lru_cache
 import ufal.morphodita as ufal
 
 from . import LOG
-from .util import generator_with_shared_state
 
 Token = namedtuple("Token", "word lemma tag")
 
 
 class Tagger:
-    """A MorphoDiTa morphological tagger and lemmatizer associated
-    with a particular set of tagging models.
+    """A MorphoDiTa morphological tagger and lemmatizer.
+
+    :param tagger_path: Path to the pre-compiled tagging models to load.
+    :type tagger_path: str
 
     """
 
@@ -31,29 +30,16 @@ class Tagger:
         "strings!) of strings as the ``text`` parameter."
     )
 
-    def __init__(self, tagger):
-        """Create a ``Tagger`` object.
-
-        :param tagger: Path to the pre-compiled tagging models.
-        :type tagger: str
-
-        """
-        self._tpath = tagger
+    def __init__(self, tagger_path):
+        self._tagger_path = tagger_path
         LOG.info("Loading tagger.")
-        self._tagger = ufal.Tagger.load(tagger)
+        self._tagger = ufal.Tagger.load(tagger_path)
         if self._tagger is None:
-            raise RuntimeError("Unable to load tagger from {!r}!".format(tagger))
+            raise RuntimeError("Unable to load tagger from {!r}!".format(tagger_path))
         self._morpho = self._tagger.getMorpho()
-        self._forms = ufal.Forms()
-        self._lemmas = ufal.TaggedLemmas()
-        self._tokens = ufal.TokenRanges()
-        self._tokenizer = self._tagger.newTokenizer()
-        if self._tokenizer is None:
-            LOG.warning(self._NO_TOKENIZER.format(tagger))
-
-    @lazy
-    def _vtokenizer(self):
-        return ufal.Tokenizer_newVerticalTokenizer()
+        self._has_tokenizer = self._tagger.newTokenizer() is not None
+        if not self._has_tokenizer:
+            LOG.warning(self._NO_TOKENIZER.format(tagger_path))
 
     @lazy
     def _pdt_to_conll2009_converter(self):
@@ -87,7 +73,7 @@ class Tagger:
             ) from err
         return converter
 
-    def tag(self, text, sents=False, guesser=False, convert=None):
+    def tag(self, text, *, sents=False, guesser=False, convert=None):
         """Perform morphological tagging and lemmatization on text.
 
         If ``text`` is a string, sentence-split, tokenize and tag that
@@ -95,48 +81,47 @@ class Tagger:
         then take each nested iterable as a separate sentence and tag it,
         honoring the provided sentence boundaries and tokenization.
 
-        The method returns a generator and the underlying tagger is shared by
-        all such generators, so if you try to start tagging a new text before
-        you've exhausted the generator for a previous one, a ``RuntimeError``
-        will be raised. If you want to tag in parallel, create multiple
-        taggers.
-
         :param text: Input text.
-        :type text: Either str (tokenization is left to the tagger) or
-        iterable of iterables (of str), representing individual sentences.
+        :type text: either str (tokenization is left to the tagger) or
+                    iterable of iterables (of str), representing individual
+                    sentences
         :param sents: Whether to signal sentence boundaries by outputting a
-        sequence of lists (sentences).
+                      sequence of lists (sentences).
         :type sents: bool
         :param guesser: Whether to use the morphological guesser provided
-        with the tagger (if available).
+                        with the tagger (if available).
         :type guesser: bool
         :param convert: Conversion strategy to apply to lemmas and / or tags
-        before outputting them.
+                        before outputting them.
         :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment"
-        or "strip_lemma_id", or None if no conversion is required
+                       or "strip_lemma_id", or None if no conversion is required
+        :return: An iterator over the tagged text, possibly grouped into
+                 sentences if ``sents=True``.
 
-        >>> import pytest
-        >>> pytest.skip("example not tested")
-        >>> t = Tagger("path/to/czech-morfflex-pdt-160310.tagger")
-        >>> list(t.tag("Je zima. Bude sněžit."))
+        >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+        >>> from pprint import pprint
+        >>> tokens = list(tagger.tag("Je zima. Bude sněžit."))
+        >>> pprint(tokens)
         [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
          Token(word='.', lemma='.', tag='Z:-------------'),
          Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
          Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
          Token(word='.', lemma='.', tag='Z:-------------')]
-        >>> list(t.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
+        >>> tokens = list(tagger.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
+        >>> pprint(tokens)
         [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
          Token(word='.', lemma='.', tag='Z:-------------'),
          Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
          Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
          Token(word='.', lemma='.', tag='Z:-------------')]
-        >>> list(t.tag("Je zima. Bude sněžit.", sents=True))
+        >>> sents = list(tagger.tag("Je zima. Bude sněžit.", sents=True))
+        >>> pprint(sents)
         [[Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
           Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
           Token(word='.', lemma='.', tag='Z:-------------')],
-        [Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
+         [Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
           Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
           Token(word='.', lemma='.', tag='Z:-------------')]]
 
@@ -155,51 +140,61 @@ class Tagger:
             raise TypeError(self._TEXT_REQS)
 
     def tag_untokenized(self, text, sents=False, guesser=False, convert=None):
-        """This is the method ``Tagger.tag()`` delegates to when ``text`` is a
-        string. See docstring for ``Tagger.tag()`` for details about parameters.
+        """This is the method :meth:`tag` delegates to when `text` is a string.
+        See docstring for :meth:`tag` for details about parameters.
 
         """
+        if not self._has_tokenizer:
+            raise RuntimeError(self._NO_TOKENIZER.format(self._tagger_path))
+        tokenizer = self._tagger.newTokenizer()
+        tokenizer.setText(text)
         converter = self._get_converter(convert)
-        if self._tokenizer is None:
-            raise RuntimeError(self._NO_TOKENIZER.format(self._tpath))
-        yield from self._tag(text, self._tokenizer, sents, guesser, converter)
+        forms = ufal.Forms()
+        tagged_lemmas = ufal.TaggedLemmas()
+        token_ranges = ufal.TokenRanges()
+        yield from self._tag(
+            tokenizer, sents, guesser, converter, forms, tagged_lemmas, token_ranges
+        )
 
     def tag_tokenized(self, text, sents=False, guesser=False, convert=None):
-        """This is the method ``Tagger.tag()`` delegates to when ``text`` is an
-        iterable of iterables of strings. See docstring for ``Tagger.tag()``
-        for details about parameters.
+        """This is the method :meth:`tag` delegates to when `text` is an
+        iterable of iterables of strings. See docstring for :meth:`tag` for
+        details about parameters.
 
         """
+        vtokenizer = ufal.Tokenizer_newVerticalTokenizer()
         converter = self._get_converter(convert)
+        forms = ufal.Forms()
+        tagged_lemmas = ufal.TaggedLemmas()
+        token_ranges = ufal.TokenRanges()
         for sent in text:
-            # refuse to process if sent is a string or not an iterable, because
-            # that would result in tagging each character separately, which is
-            # nonsensical
+            # refuse to process if sent is a string (because that would result
+            # in tagging each character separately, which is nonsensical), or
+            # more generally, not an iterable,
             if isinstance(sent, str) or not isinstance(sent, Iterable):
                 raise TypeError(self._TEXT_REQS)
+            vtokenizer.setText("\n".join(sent))
             yield from self._tag(
-                "\n".join(sent), self._vtokenizer, sents, guesser, converter
+                vtokenizer,
+                sents,
+                guesser,
+                converter,
+                forms,
+                tagged_lemmas,
+                token_ranges,
             )
 
-    @generator_with_shared_state
-    def _tag(self, text, tokenizer, sents, guesser, converter):
-        tagger, forms, lemmas, tokens = (
-            self._tagger,
-            self._forms,
-            self._lemmas,
-            self._tokens,
-        )
-        tokenizer.setText(text)
-        while tokenizer.nextSentence(forms, tokens):
-            tagger.tag(forms, lemmas, guesser)
-            sent = []
-            for i in range(len(lemmas)):
-                lemma = lemmas[i]
-                tok = tokens[i]
-                word = text[tok.start : tok.start + tok.length]  # noqa: E203
+    def _tag(
+        self, tokenizer, sents, guesser, converter, forms, tagged_lemmas, token_ranges
+    ):
+        while tokenizer.nextSentence(forms, token_ranges):
+            self._tagger.tag(forms, tagged_lemmas, guesser)
+            if sents:
+                sent = []
+            for tagged_lemma, word in zip(tagged_lemmas, forms):
                 if converter is not None:
-                    converter.convert(lemma)
-                token = Token(word, lemma.lemma, lemma.tag)
+                    converter.convert(tagged_lemma)
+                token = Token(word, tagged_lemma.lemma, tagged_lemma.tag)
                 if sents:
                     sent.append(token)
                 else:
