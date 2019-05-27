@@ -19,12 +19,14 @@
 
 # -- Project information -----------------------------------------------------
 
+import corpy
+
 project = "corpy"
 copyright = "2019, David Lukeš"
 author = "David Lukeš"
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.2"
+release = corpy.__version__
 
 
 # -- General configuration ---------------------------------------------------
