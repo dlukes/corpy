@@ -39,6 +39,8 @@ rope = "^0.14.0"
 # rst linter
 doc8 = "^0.8.0"
 twine = "^1.13"
+sphinx = "^2.0"
+sphinx-rtd-theme = "^0.4.3"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"

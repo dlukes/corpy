@@ -12,10 +12,10 @@ def _head_gen(items, first_n):
 
 
 def head(collection, first_n=None):
-    """Inspect collection, truncated if too long.
+    """Inspect `collection`, truncated if too long.
 
-    If first_n is None, an appropriate value is determined based on
-    the type of the collection.
+    If ``first_n=None``, an appropriate value is determined based on the type
+    of the collection.
 
     """
     type_ = type(collection)

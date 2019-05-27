@@ -1,3 +1,6 @@
+"""Convenience wrappers for visualizing linguistic data.
+
+"""
 from collections import Counter
 from collections.abc import Mapping, Iterable
 
@@ -10,9 +13,12 @@ CM_PER_IN = 2.54
 def size_in_pixels(width, height, unit="in", ppi=300):
     """Convert size in inches/cm to pixels.
 
-    width, height: dimensions, as measured by unit
-    unit: "in" for inches, "cm" for centimeters
-    ppi: pixels per inch
+    :param width: width, measured in `unit`
+    :param height: height, measured in `unit`
+    :param unit: ``"in"`` for inches, ``"cm"`` for centimeters
+    :param ppi: pixels per inch
+    :return: ``(width, height)`` in pixels
+    :rtype: (int, int)
 
     Sample values for ppi:
 
@@ -27,9 +33,9 @@ def size_in_pixels(width, height, unit="in", ppi=300):
     if unit not in allowed_units:
         raise ValueError(f"`unit` must be one of {allowed_units}.")
     if unit == "cm":
-        width = round(width * CM_PER_IN)
-        height = round(height * CM_PER_IN)
-    return width * ppi, height * ppi
+        width = width * CM_PER_IN
+        height = height * CM_PER_IN
+    return round(width * ppi), round(height * ppi)
 
 
 def _optimize_dimensions(size, fast, fast_limit):
@@ -62,30 +68,32 @@ def wordcloud(
     """Generate a wordcloud.
 
     If `data` is a string, the wordcloud is generated using the
-    method `.generate_from_text()`, which automatically ignores
+    method :meth:`WordCloud.generate_from_text`, which automatically ignores
     stopwords (customizable with the `stopwords` argument) and
     includes "collocations" (i.e. bigrams).
 
     If `data` is a sequence or a mapping, the wordcloud is generated
-    using the method `.generate_from_frequencies()` and these
+    using the method :meth:`WordCloud.generate_from_frequencies` and these
     preprocessing responsibilities fall to the user.
 
-    data: input data -- either one long string of text, or an
+    :param data: input data -- either one long string of text, or an
         iterable of tokens, or a mapping of word types to their
         frequencies; use the second or third option if you want
         full control over the output
-    size: size in pixels, as a tuple of integers, (width, height);
+    :param size: size in pixels, as a tuple of integers, (width, height);
         if you want to specify the size in inches or cm, use the
-        `size_in_pixels()` function to generate this tuple
-    rounded: whether or not to enclose the wordcloud in an ellipse;
+        :func:`size_in_pixels` function to generate this tuple
+    :param rounded: whether or not to enclose the wordcloud in an ellipse;
         incompatible with the `mask` keyword argument
-    fast: when True, optimizes large wordclouds for speed of
+    :param fast: when ``True``, optimizes large wordclouds for speed of
         generation rather than precision of word placement
-    fast_limit: speed optimizations for "large" wordclouds are
+    :param fast_limit: speed optimizations for "large" wordclouds are
         applied when the requested canvas size is larger than
-        `fast_limit**2`
-    kwargs: remaining keyword arguments are passed on to the
-        `wordcloud.WordCloud` initializer
+        ``fast_limit**2``
+    :param kwargs: remaining keyword arguments are passed on to the
+        :class:`wordcloud.WordCloud` initializer
+    :return: The word cloud.
+    :rtype: :class:`wordcloud.WordCloud`
 
     """
     if rounded and kwargs.get("mask"):
@@ -100,14 +108,14 @@ def wordcloud(
     width, height, scale = _optimize_dimensions(size, fast, fast_limit)
     if rounded:
         kwargs["mask"] = _elliptical_mask(width, height)
-    wc = WordCloud(width=width, height=height, scale=scale, **kwargs)
+    wcloud = WordCloud(width=width, height=height, scale=scale, **kwargs)
 
     # raw text
     if isinstance(data, str):
-        return wc.generate_from_text(data)
+        return wcloud.generate_from_text(data)
     # frequency counts
     elif isinstance(data, Mapping):
-        return wc.generate_from_frequencies(data)
+        return wcloud.generate_from_frequencies(data)
     # tokenized text
     # NOTE: the second condition is there because of nltk.text, which
     # behaves like an Iterable / Collection / Sequence for all
@@ -115,25 +123,27 @@ def wordcloud(
     # base classes don't pick up on it (maybe because it only has a
     # __getitem__ magic method?)
     elif isinstance(data, Iterable) or hasattr(data, "__getitem__"):
-        return wc.generate_from_frequencies(Counter(data))
+        return wcloud.generate_from_frequencies(Counter(data))
     else:
         raise ValueError(
             "`data` must be a string, a mapping from words to frequencies, or an iterable of words."
         )
 
 
-def _wordcloud_png(wc):
+def _wordcloud_png(wcloud):
     from IPython.display import display
 
-    return display(wc.to_image())
+    return display(wcloud.to_image())
 
 
 try:
     from IPython import get_ipython
 
-    ip = get_ipython()
-    if ip is not None:
-        png_formatter = ip.display_formatter.formatters["image/png"]
-        png_formatter.for_type(WordCloud, _wordcloud_png)
+    _ipython = get_ipython()  # pylint: disable=invalid-name
+    if _ipython is not None:
+        _png_formatter = _ipython.display_formatter.formatters[  # pylint: disable=invalid-name
+            "image/png"
+        ]
+        _png_formatter.for_type(WordCloud, _wordcloud_png)
 except ImportError:
     pass

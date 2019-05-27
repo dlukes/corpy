@@ -1,0 +1,4 @@
+# TODO: get rid of this if/when there's a proven, recommended setup for
+# ReadTheDocs + Poetry
+sphinx>=2.0,<=3.0
+sphinx-rtd-theme

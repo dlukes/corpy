@@ -82,21 +82,20 @@ class Tagger:
         honoring the provided sentence boundaries and tokenization.
 
         :param text: Input text.
-        :type text: either str (tokenization is left to the tagger) or
-                    iterable of iterables (of str), representing individual
-                    sentences
+        :type text: either str (tokenization is left to the tagger) or iterable
+            of iterables (of str), representing individual sentences
         :param sents: Whether to signal sentence boundaries by outputting a
-                      sequence of lists (sentences).
+            sequence of lists (sentences).
         :type sents: bool
-        :param guesser: Whether to use the morphological guesser provided
-                        with the tagger (if available).
+        :param guesser: Whether to use the morphological guesser provided with
+            the tagger (if available).
         :type guesser: bool
         :param convert: Conversion strategy to apply to lemmas and / or tags
-                        before outputting them.
-        :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment"
-                       or "strip_lemma_id", or None if no conversion is required
+            before outputting them.
+        :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment" or
+            "strip_lemma_id", or None if no conversion is required
         :return: An iterator over the tagged text, possibly grouped into
-                 sentences if ``sents=True``.
+            sentences if ``sents=True``.
 
         >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
         >>> from pprint import pprint

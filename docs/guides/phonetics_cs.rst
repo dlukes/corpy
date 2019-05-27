@@ -1,25 +1,17 @@
-===============
-corpy.phonetics
-===============
-
-Overview
-========
-
-Doing phonetics with Python.
-
-Czech rule-based grapheme-to-phoneme conversion
-===============================================
+===================================================
+Rule-based grapheme to phoneme conversion for Czech
+===================================================
 
 In addition to rules, an exception system is also implemented which makes it
 possible to capture less regular pronunciation patterns.
 
 Usage
------
+=====
 
-The simplest public interface is the ``transcribe`` function. See its
-docstring for more information on the types of accepted input as well as on
-output options and other available customizations. Here are a few usage
-examples -- default output is SAMPA:
+The simplest public interface is the :func:`~corpy.phonetics.cs.transcribe`
+function. See its docstring for more information on the types of accepted input
+as well as on output options and other available customizations. Here are a few
+usage examples -- default output is SAMPA:
 
 .. code:: python
 
@@ -43,9 +35,8 @@ assimilation of voicing:
    [('m', 'a:', 'S'), ('h\\', 'l', 'a', 't')]
 
 As you can see, these special hyphens get deleted in the process of
-transcription, so if you want a literal hyphen, it must be inside a token
-with either no alphabetic characters, or at least one other non-alphabetic
-character:
+transcription, so if you want a literal hyphen, it must be inside a token with
+either no alphabetic characters, or at least one other non-alphabetic character:
 
 .. code:: python
 
@@ -61,27 +52,27 @@ treatment of hyphens described above) are passed through as is:
    [('m', 'a:', 'Z'), '?', ('h\\', 'l', 'a', 't')]
 
 And you can even configure some of them to constitute a blocking boundary for
-interactions between phones (notice that unlike in the previous example,
-"máš" ends with a /S/ → assimilation of voicing wasn't allowed to spread
-past the ".."):
+interactions between phones (notice that unlike in the previous example, "máš"
+ends with a /S/ → assimilation of voicing wasn't allowed to spread past the
+".."):
 
 .. code:: python
 
    >>> cs.transcribe("máš .. hlad", prosodic_boundary_symbols={".."})
    [('m', 'a:', 'S'), '..', ('h\\', 'l', 'a', 't')]
 
-Finally, when the input is a single string, it's simply split on whitespace,
-but you can also provide your own tokenization. E.g. if your input string
-contains unspaced square brackets to mark overlapping speech, this is
-probably not the output you want:
+Finally, when the input is a single string, it's simply split on whitespace, but
+you can also provide your own tokenization. E.g. if your input string contains
+unspaced square brackets to mark overlapping speech, this is probably not the
+output you want:
 
 .. code:: python
 
    >>> cs.transcribe("[máš] hlad")
    ['[máš]', ('h\\', 'l', 'a', 't')]
 
-But if you pretokenize the input yourself according to rules that make sense
-in your situation, you're good to go:
+But if you pretokenize the input yourself according to rules that make sense in
+your situation, you're good to go:
 
 .. code:: python
 

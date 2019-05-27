@@ -32,8 +32,8 @@ def _load_phones(tsv: str) -> Dict[str, Dict[str, str]]:
         line = line_.split("\t")
         key = line.pop(0)
         val = ans.setdefault(key, {})
-        for k, v in zip(header, line):
-            val[k] = v
+        for alphabet_id, symbol in zip(header, line):
+            val[alphabet_id] = symbol
     return ans
 
 
@@ -44,9 +44,9 @@ def _load_substr2phones(tsv: str, allowed: Dict) -> Dict[str, List[str]]:
     for line in _filter_comments(lines):
         substr, phones = line.split("\t")
         phones_for_substr = ans.setdefault(substr, [])
-        for ph in phones.split():
-            assert ph in allowed, f"Unexpected phone {ph!r}"
-            phones_for_substr.append(ph)
+        for phone in phones.split():
+            assert phone in allowed, f"Unexpected phone {phone!r}"
+            phones_for_substr.append(phone)
     return ans
 
 
@@ -94,7 +94,7 @@ class _ExceptionRewriter:
         }
 
     @lru_cache()
-    def sub(self, string: str) -> str:
+    def _sub(self, string: str) -> str:
         self._at = 0
         return self._re.sub(self._rewrite, string)
 
@@ -144,6 +144,13 @@ REWRITER = _ExceptionRewriter(
 
 
 class Phone:
+    """A single phone.
+
+    You probably don't need to create these by hand, but they will be returned
+    to you from :func:`transcribe`.
+
+    """
+
     def __init__(self, value: str, *, word_boundary: bool = False) -> None:
         self.value: str = value
         self.word_boundary = word_boundary
@@ -161,10 +168,12 @@ class ProsodicUnit:
     This means that various connected speech processes are emulated at word
     boundaries within the unit as well as within words.
 
+    :param orthographic: The orthographic transcript of the prosodic unit.
+    :type orthographic: list of str
+
     """
 
     def __init__(self, orthographic: List[str]) -> None:
-        """Initialize ProsodicUnit with orthographic transcript."""
         self.orthographic = orthographic
         self._phonetic: Optional[List[Phone]] = None
 
@@ -173,12 +182,12 @@ class ProsodicUnit:
     ) -> List[Tuple[str, ...]]:
         """Phonetic transcription of ProsodicUnit."""
         if self._phonetic is None:
-            t = self._str2phones(self.orthographic)
+            trans = self._str2phones(self.orthographic)
             # CSPs are implemented in one reverse pass (assimilation of voicing
             # can propagate) and one forward pass
-            t = self._voicing_assim(t)
-            t = self._other_csps(t, hiatus=hiatus)
-            self._phonetic = t
+            trans = self._voicing_assim(trans)
+            trans = self._other_csps(trans, hiatus=hiatus)
+            self._phonetic = trans
         return self._split_words_and_translate(self._phonetic, alphabet)
 
     @staticmethod
@@ -193,7 +202,7 @@ class ProsodicUnit:
         for word in input_:
             word = word.lower()
             # rewrite exceptions
-            word = REWRITER.sub(word)
+            word = REWRITER._sub(word)
             # force hiatus in <i[ií]> sequences; <y> is there because the
             # exceptions above can insert it in place of <i> to prevent
             # palatalization
@@ -205,10 +214,10 @@ class ProsodicUnit:
                 substr = match.group()
                 try:
                     phones = SUBSTR2PHONES[substr]
-                except KeyError as e:
+                except KeyError as err:
                     raise ValueError(
                         f"Unexpected substring in input: {substr!r}"
-                    ) from e
+                    ) from err
                 output.extend(Phone(ph) for ph in phones)
             output[-1].word_boundary = True
         return output
@@ -222,16 +231,16 @@ class ProsodicUnit:
         """
         output = []
         previous_phone = EMPTY_PHONE
-        for ph in reversed(input_):
+        for phone in reversed(input_):
             if previous_phone.value in TRIGGER_VOICING:
-                ph.value = DEVOICED2VOICED.get(ph.value, ph.value)
-            elif ph.word_boundary or previous_phone.value in TRIGGER_DEVOICING:
-                ph.value = VOICED2DEVOICED.get(ph.value, ph.value)
+                phone.value = DEVOICED2VOICED.get(phone.value, phone.value)
+            elif phone.word_boundary or previous_phone.value in TRIGGER_DEVOICING:
+                phone.value = VOICED2DEVOICED.get(phone.value, phone.value)
             # for P\, the assimilation works the other way round too
-            elif previous_phone.value == "P\\" and ph.value in TRIGGER_DEVOICING:
+            elif previous_phone.value == "P\\" and phone.value in TRIGGER_DEVOICING:
                 previous_phone.value = "Q\\"
-            output.append(ph)
-            previous_phone = ph
+            output.append(phone)
+            previous_phone = phone
         output.reverse()
         return output
 
@@ -239,33 +248,33 @@ class ProsodicUnit:
     def _other_csps(input_: List[Phone], *, hiatus=False) -> List[Phone]:
         """Perform other connected speech processes."""
         output = []
-        for i, ph in enumerate(input_):
+        for i, phone in enumerate(input_):
             try:
                 next_ph = input_[i + 1]
             except IndexError:
                 next_ph = EMPTY_PHONE
             # assimilation of place for nasals
-            if ph.value == "n" and next_ph.value in ("k", "g"):
-                ph.value = "N"
-            elif ph.value == "m" and next_ph.value in ("f", "v"):
-                ph.value = "F"
+            if phone.value == "n" and next_ph.value in ("k", "g"):
+                phone.value = "N"
+            elif phone.value == "m" and next_ph.value in ("f", "v"):
+                phone.value = "F"
             # no gemination (except across word boundaries and for short
             # vowels); cf. remove duplicate graphemes above for the
             # orthographic counterpart of this rule
             elif (
-                ph.value == next_ph.value
-                and ph.value not in "aEIou"
-                and not ph.word_boundary
+                phone.value == next_ph.value
+                and phone.value not in "aEIou"
+                and not phone.word_boundary
             ):
                 continue
             # drop CSP-blocking pseudophones (they've done their job by now)
-            elif ph.value == "-":
+            elif phone.value == "-":
                 continue
-            output.append(ph)
+            output.append(phone)
             # optionally add transient /j/ between high front vowel and subsequent vowel
             if (
                 hiatus
-                and re.match("[Ii]", ph.value)
+                and re.match("[Ii]", phone.value)
                 and re.match("[aEIoui]", next_ph.value)
             ):
                 output.append(Phone("j"))
@@ -278,9 +287,9 @@ class ProsodicUnit:
         output = []
         word = []
         alphabet = alphabet.lower()
-        for ph in input_:
-            word.append(PHONES.get(ph.value, {}).get(alphabet, ph.value))
-            if ph.word_boundary:
+        for phone in input_:
+            word.append(PHONES.get(phone.value, {}).get(alphabet, phone.value))
+            if phone.word_boundary:
                 output.append(tuple(word))
                 word = []
         return output
@@ -326,39 +335,39 @@ def transcribe(
     hiatus=False,
     prosodic_boundary_symbols=set(),
 ) -> List[Union[str, Tuple[str, ...]]]:
-    """Phonetically transcribe ``phrase``.
+    """Phonetically transcribe `phrase`.
 
-    ``phrase`` is either a string (in which case it is split on whitespace)
-    or an iterable of strings (in which case it's considered as already
-    tokenized by the user).
+    `phrase` is either a string (in which case it is split on whitespace) or an
+    iterable of strings (in which case it's considered as already tokenized by
+    the user).
 
-    Transcription is attempted for tokens which consist purely of
-    alphabetical characters and possibly hyphens (``-``). Other tokens are
-    passed through unchanged. Hyphens have a special role: they prevent
-    interactions between graphemes or phones from taking place, which means
-    you can e.g. cancel assimilation of voicing in a cluster like "tb" by
-    inserting a hyphen between the graphemes: "t-b". They are removed from
-    the final output. If you want a **literal hyphen**, it must be inside a
-    token with either no alphabetic characters, or at least one other
-    non-alphabetic character (e.g. "-", "---", "-hlad?", etc.).
+    Transcription is attempted for tokens which consist purely of alphabetical
+    characters and possibly hyphens (``-``). Other tokens are passed through
+    unchanged. Hyphens have a special role: they prevent interactions between
+    graphemes or phones from taking place, which means you can e.g. cancel
+    assimilation of voicing in a cluster like ``tb`` by inserting a hyphen
+    between the graphemes: ``t-b``. They are removed from the final output. If
+    you want a **literal hyphen**, it must be inside a token with either no
+    alphabetic characters, or at least one other non-alphabetic character (e.g.
+    ``-``, ``---``, ``-hlad?``, etc.).
 
-    Returns a list where **transcribed tokens** are represented as **tuples
-    of strings** (phones) and **non-transcribed tokens** (which were just
-    passed through as-is) as plain **strings**.
+    Returns a list where **transcribed tokens** are represented as **tuples of
+    strings** (phones) and **non-transcribed tokens** (which were just passed
+    through as-is) as plain **strings**.
 
-    ``alphabet`` is one of SAMPA, IPA, CS or CNC (case insensitive) and
-    determines the symbol alphabet used in the phonetic transcript.
+    `alphabet` is one of SAMPA, IPA, CS or CNC (case insensitive) and determines
+    the symbol alphabet used in the phonetic transcript.
 
-    When ``hiatus == True``, a /j/ phone is added between a high front vowel
+    When ``hiatus=True``, a /j/ phone is added between a high front vowel
     and a subsequent vowel.
 
     Various connected speech processes such as assimilation of voicing are
     emulated even across word boundaries. By default, this happens
     **irrespective of intervening non-transcribed tokens**. If you want some
     types of non-transcribed tokens to constitute an obstacle to interactions
-    between phones, pass them as a set via the ``prosodic_boundary_symbols``
-    argument. E.g. ``prosodic_boundary_symbols={"?", ".."}`` will prevent
-    CSPs from being emulated across ``?`` and ``..`` tokens.
+    between phones, pass them as a set via the `prosodic_boundary_symbols`
+    argument. E.g. ``prosodic_boundary_symbols={"?", ".."}`` will prevent CSPs
+    from being emulated across ``?`` and ``..`` tokens.
 
     """
     try:
@@ -366,10 +375,10 @@ def transcribe(
             tokens = ud.normalize("NFC", phrase.strip()).split()
         else:
             tokens = [ud.normalize("NFC", t) for t in phrase]
-    except TypeError as e:
+    except TypeError as err:
         raise TypeError(
             f"Expected str or Iterable[str] as phrase argument, got {type(phrase)} instead"
-        ) from e
+        ) from err
     matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
     transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
     return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore

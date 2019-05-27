@@ -1,6 +1,6 @@
-==============
-corpy.vertical
-==============
+======================================
+Wrangle corpora in the vertical format
+======================================
 
 Overview
 ========
@@ -11,11 +11,17 @@ Tools for parsing corpora in the vertical format devised originally for `CWB
 were just standards compliant XML, but they appeared before XML, so they're
 not. Hence this.
 
-Usage
-=====
+NOTE: The examples below are currently not tested because they require the
+:file:`syn2015.gz` vertical file to be available, which is large and should not
+be freely distributed.
+
+.. code:: python
+
+   >>> import pytest
+   >>> pytest.skip("examples not tested")
 
 Iterating over positions in a vertical file
--------------------------------------------
+===========================================
 
 This allows you to iterate over all positions while keeping track of the
 structural attributes of the structures they're contained within, without
@@ -23,8 +29,6 @@ risking errors from hand-coding this logic every time you need it.
 
 .. code:: python
 
-   >>> import pytest
-   >>> pytest.skip("example not tested")
    >>> from corpy.vertical import Syn2015Vertical
    >>> from pprint import pprint
    >>> v = Syn2015Vertical("path/to/syn2015.gz")
@@ -98,25 +102,23 @@ risking errors from hand-coding this logic every time you need it.
    Position(word='chvil', lemma='chvíle', tag=UtklTag(pos='N', sub='N', gen='F', num='P', case='2', pgen='-', pnum='-', pers='-', tense='-', grad='-', neg='A', act='-', p13='-', p14='-', var='-', asp='-'), proc='M', afun='Atr', parent='-1', eparent='-1', prep='', p_lemma='několik', p_tag='Ca--4-----------', p_afun='Adv', ep_lemma='několik', ep_tag='Ca--4-----------', ep_afun='Adv')
 
 Performing frequency distribution queries
------------------------------------------
+=========================================
 
-This can be done elegantly and fairly quickly with :meth:`Vertical.search`. All
-you have to do is provide a match function, which identifies positions which
-the query should match, and a count function, which specifies what should be
-counted for each match.
+This can be done elegantly and fairly quickly with
+:meth:`~corpy.vertical.Vertical.search`. All you have to do is provide a match
+function, which identifies positions which the query should match, and a count
+function, which specifies what should be counted for each match.
 
 The return value is an index of occurrences and the total size of the corpus.
 The index is a dictionary of numpy array of position indices within the corpus,
-which can be further processed e.g. using :func:`ipm` or :func:`arf` to compute
-different types of frequencies.
+which can be further processed e.g. using :func:`~corpy.vertical.ipm` or
+:func:`~corpy.vertical.arf` to compute different types of frequencies.
 
 .. code:: python
 
-   >>> import pytest
-   >>> pytest.skip("example not tested")
    >>> from corpy.vertical import Syn2015Vertical, ipm, arf
    >>> v = Syn2015Vertical("path/to/syn2015.gz")
-   >>> # log progress every 50M positions
+   # log progress every 50M positions
    >>> v.report = 50_000_000
    >>> def match(posattrs, sattrs):
    ...     # match all nouns within txtype_group "FIC: beletrie"
@@ -138,21 +140,20 @@ bug.
 
 .. code:: python
 
-   >>> import pytest
-   >>> pytest.skip("example not tested")
-   >>> # absolute frequency
+   # absolute frequency
    >>> len(index[("NOV: próza", "plíseň")])
    211
-   >>> # relative frequency (instances per million)
+   # relative frequency (instances per million)
    >>> ipm(index[("NOV: próza", "plíseň")], N)
    1.747430618598555
-   >>> # average reduced frequency (takes into account dispersion)
+   # average reduced frequency (takes into account dispersion)
    >>> arf(index[("NOV: próza", "plíseň")], N)
    54.220727998809153
 
-Subclass :class:`Vertical` for your custom corpus
--------------------------------------------------
+Subclass :class:`~corpy.vertical.Vertical` for your custom corpus
+=================================================================
 
 If you have a corpus with a different structure, you can easily adapt the tools
-by subclassing :class:`Vertical`. See its docstring for further info, or the
-implementation of :class:`Syn2015Vertical` for a practical example.
+by subclassing :class:`~corpy.vertical.Vertical`. See its docstring for further
+info, or the implementation of :class:`~corpy.vertical.Syn2015Vertical` for a
+practical example.

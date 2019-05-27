@@ -10,7 +10,7 @@ class Tokenizer:
     """A wrapper API around the tokenizers offered by MorphoDiTa.
 
     :param tokenizer_type: Type of the requested tokenizer (cf. below for
-                           possible values).
+        possible values).
     :type tokenizer_type: str
 
     `tokenizer_type` is typically one of:
@@ -30,7 +30,7 @@ class Tokenizer:
 
     def __init__(self, tokenizer_type):
         constructor_name = "new" + tokenizer_type.capitalize() + "Tokenizer"
-        self._tokenizer_constructor = getattr(ufal.Tokenizer, constructor_name)
+        self.tokenizer_constructor = getattr(ufal.Tokenizer, constructor_name)
 
     @staticmethod
     def from_tagger(tagger_path):
@@ -40,8 +40,8 @@ class Tokenizer:
         self = Tokenizer("generic")
         LOG.info("Loading tagger.")
         tagger = ufal.Tagger.load(tagger_path)
-        self._tokenizer_constructor = tagger.newTokenizer
-        if self._tokenizer_constructor() is None:
+        self.tokenizer_constructor = tagger.newTokenizer
+        if self.tokenizer_constructor() is None:
             raise RuntimeError(f"The tagger {tagger_path} has no associated tokenizer.")
         return self
 
@@ -51,10 +51,10 @@ class Tokenizer:
         :param text: Text to tokenize.
         :type text: str
         :param sents: Whether to signal sentence boundaries by outputting a
-                      sequence of lists (sentences).
+            sequence of lists (sentences).
         :type sents: bool
         :return: An iterator over the tokenized text, possibly grouped into
-                 sentences if ``sents=True``.
+            sentences if ``sents=True``.
 
         Note that MorphoDiTa performs both sentence splitting and tokenization
         at the same time, but this method iterates over tokens without sentence
@@ -86,7 +86,7 @@ class Tokenizer:
             )
         forms = ufal.Forms()
         token_ranges = ufal.TokenRanges()
-        tokenizer = self._tokenizer_constructor()
+        tokenizer = self.tokenizer_constructor()
         tokenizer.setText(text)
         while tokenizer.nextSentence(forms, token_ranges):
             if sents:

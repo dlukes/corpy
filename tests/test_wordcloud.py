@@ -7,8 +7,8 @@ from corpy import vis
 def test_size_in_pixels():
     assert vis.size_in_pixels(5, 6) == (1500, 1800)
     assert vis.size_in_pixels(5, 6, ppi=96) == (480, 576)
-    assert vis.size_in_pixels(5, 6, unit="cm") == (3900, 4500)
-    assert vis.size_in_pixels(4, 10, unit="cm", ppi=96) == (960, 2400)
+    assert vis.size_in_pixels(5, 6, unit="cm") == (3810, 4572)
+    assert vis.size_in_pixels(4, 10, unit="cm", ppi=96) == (975, 2438)
     with pytest.raises(ValueError) as exc_info:
         vis.size_in_pixels(5, 5, unit="foo")
     assert str(exc_info.value) == "`unit` must be one of ('in', 'cm')."
