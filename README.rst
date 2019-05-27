@@ -4,7 +4,11 @@ CorPy
 
 .. image:: https://readthedocs.org/projects/corpy/badge/?version=latest
    :target: https://corpy.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+   :alt: Documentation status
+
+.. image:: https://badge.fury.io/py/corpy.svg
+   :target: https://badge.fury.io/py/corpy
+   :alt: PyPI package
 
 What is CorPy?
 ==============
