@@ -96,6 +96,8 @@ Tokenize, tag and lemmatize a text represented as a string:
 
 With sentence boundaries:
 
+.. code:: python
+
    >>> sents = list(tagger.tag("Je zima. Bude sněžit.", sents=True))
    >>> pprint(sents)
    [[Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),

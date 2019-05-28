@@ -5,5 +5,6 @@ __pycache__
 .pytest_cache
 dist
 *.tagger
+*.udpipe
 pip-wheel-metadata
 docs/_build

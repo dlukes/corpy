@@ -7,6 +7,7 @@
    :maxdepth: 1
    :caption: User guides
 
+   guides/udpipe.rst
    guides/morphodita.rst
    guides/vis.rst
    guides/phonetics_cs.rst
@@ -16,6 +17,7 @@
 .. toctree::
    :caption: API reference
 
+   api/udpipe.rst
    api/morphodita.rst
    api/vis.rst
    api/phonetics_cs.rst

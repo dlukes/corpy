@@ -35,7 +35,7 @@ class Tagger:
         LOG.info("Loading tagger.")
         self._tagger = ufal.Tagger.load(tagger_path)
         if self._tagger is None:
-            raise RuntimeError("Unable to load tagger from {!r}!".format(tagger_path))
+            raise RuntimeError(f"Unable to load tagger from {tagger_path!r}!")
         self._morpho = self._tagger.getMorpho()
         self._has_tokenizer = self._tagger.newTokenizer() is not None
         if not self._has_tokenizer:
