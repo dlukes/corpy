@@ -23,9 +23,40 @@ The short URL to the docs is: https://corpy.rtfd.io/
 
 Here's an idea of what you can do with CorPy:
 
-- `tokenize and morphologically tag
-  <https://corpy.rtfd.io/en/latest/guides/morphodita.html>`__ raw textual data
-  using `MorphoDiTa <https://github.com/ufal/morphodita>`__
+- add linguistic annotation to raw textual data using either UDPipe_ or
+  MorphoDiTa_
+
+.. _UDPipe: http://ufal.mff.cuni.cz/udpipe
+.. _MorphoDiTa: http://ufal.mff.cuni.cz/morphodita
+
+.. note::
+
+   **Should I pick UDPipe or MorphoDiTa?**
+
+   UDPipe_ has more features at the cost of being somewhat more complex: it does
+   both `morphological tagging (including lemmatization) and syntactic parsing
+   <https://corpy.rtfd.io/en/latest/guides/udpipe.html>`__, and it handles a
+   number of different input and output formats. You can also download
+   `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for many
+   different languages.
+
+   By contrast, MorphoDiTa_ only has `pre-trained models for Czech and English
+   <http://ufal.mff.cuni.cz/morphodita/users-manual>`__, and only performs
+   `morphological tagging (including lemmatization)
+   <https://corpy.rtfd.io/en/latest/guides/morphodita.html>`__. However, its
+   output is more straightforward -- it just splits your text into tokens and
+   annotates them, whereas UDPipe can (depending on the model) introduce
+   additional tokens necessary for a more explicit analysis, add multi-word
+   tokens etc. This is because UDPipe is tailored to the type of linguistic
+   analysis conducted within the UniversalDependencies_ project, using the
+   CoNLL-U_ data format.
+
+   MorphoDiTa can also help you if you just want to tokenize text and don't have
+   a language model available.
+
+.. _UniversalDependencies: https://universaldependencies.org
+.. _CoNLL-U: https://universaldependencies.org/format.html
+
 - `easily generate word clouds
   <https://corpy.rtfd.io/en/latest/guides/vis.html>`__
 - `generate phonetic transcripts of Czech texts

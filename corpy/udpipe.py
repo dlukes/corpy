@@ -55,7 +55,9 @@ class Model:
         if self._model is None:
             raise RuntimeError(f"Unable to load model from {model_path!r}!")
 
-    def process(self, text, *, in_format="tokenize", tag=True, parse=True):
+    def process(
+        self, text, *, tag=True, parse=True, in_format="tokenize", out_format=None
+    ):
         """Process input text, yielding sentences one by one.
 
         The text is always at least tokenized, and optionally morphologically
@@ -64,32 +66,57 @@ class Model:
 
         :param text: Text to process.
         :type text: str
-        :param in_format: Input format (cf. below for possible values).
-        :type in_format: str
         :param tag: Perform morphological tagging.
         :type tag: bool
         :param parse: Perform syntactic parsing.
         :type parse: bool
+        :param in_format: Input format (cf. below for possible values).
+        :type in_format: str
+        :param out_format: Output format (cf. below for possible values).
+        :type out_format: None or str
 
         The input text is a string in one of the following formats (specified
         by ``in_format``):
 
         - ``"tokenize"``: freeform text, which will be sentence split and
           tokenized by UDPipe
-        - ``"conllu"``: the `CoNLL-U <https://universaldependencies.org/docs/format.html>`__
-          format
+        - ``"conllu"``: the CoNLL-U_ format
         - ``"horizontal"``: one sentence per line, word forms separated by
           spaces
         - ``"vertical"``: one word per line, empty lines denote sentence ends
 
+        .. _CoNLL-U: https://universaldependencies.org/docs/format.html
+
+        The output format is specified by ``out_format``:
+
+        - ``None``: native :mod:`ufal.udpipe` objects, suitable for further
+          manipulation in Python
+        - ``"conllu"``, ``"horizontal"`` or ``"vertical"``: cf. above
+        - ``"epe"``: the EPE (Extrinsic Parser Evaluation 2017) interchange
+          format
+        - ``"matxin"``: the Matxin XML format
+        - ``"plaintext"``: reconstruct text with original spaces, discarding
+          annotations
+
+        New input and output formats may be added with new releases of UDPipe;
+        for an up-to-date list, consult the `UDPipe API reference
+        <http://ufal.mff.cuni.cz/udpipe/api-reference>`__.
+
         """
         default = self._model.DEFAULT
+
         if in_format == "tokenize":
             in_format = self._model.newTokenizer(default)
         else:
             in_format = udpipe.InputFormat.newInputFormat(in_format)
-        if not in_format:
-            raise RuntimeError(f"Cannot create input format {in_format!r}.")
+            if in_format is None:
+                raise RuntimeError(f"Cannot create input format {in_format!r}.")
+
+        if out_format is not None:
+            out_format = udpipe.OutputFormat.newOutputFormat(out_format)
+            if out_format is None:
+                raise RuntimeError(f"Cannot create output format {out_format!r}.")
+
         in_format.setText(text)
         error = udpipe.ProcessingError()
         sent = udpipe.Sentence()
@@ -98,10 +125,17 @@ class Model:
                 self._model.tag(sent, default)
             if parse:
                 self._model.parse(sent, default)
-            yield sent
+            if out_format is None:
+                yield sent
+            else:
+                yield out_format.writeSentence(sent)
             sent = udpipe.Sentence()
             if error.occurred():
                 raise UdpipeError(error.message)
+        if out_format is not None:
+            end = out_format.finishDocument()
+            if end != "":
+                yield end
 
 
 def _pprint_token(token, printer, cycle):
