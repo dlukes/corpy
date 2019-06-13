@@ -55,9 +55,7 @@ class Model:
         if self._model is None:
             raise RuntimeError(f"Unable to load model from {model_path!r}!")
 
-    def process(
-        self, text, *, tag=True, parse=True, in_format="tokenize", out_format=None
-    ):
+    def process(self, text, *, tag=True, parse=True, in_format=None, out_format=None):
         """Process input text, yielding sentences one by one.
 
         The text is always at least tokenized, and optionally morphologically
@@ -71,15 +69,15 @@ class Model:
         :param parse: Perform syntactic parsing.
         :type parse: bool
         :param in_format: Input format (cf. below for possible values).
-        :type in_format: str
+        :type in_format: None or str
         :param out_format: Output format (cf. below for possible values).
         :type out_format: None or str
 
         The input text is a string in one of the following formats (specified
         by ``in_format``):
 
-        - ``"tokenize"``: freeform text, which will be sentence split and
-          tokenized by UDPipe
+        - ``None``: freeform text, which will be sentence split and tokenized
+          by UDPipe
         - ``"conllu"``: the CoNLL-U_ format
         - ``"horizontal"``: one sentence per line, word forms separated by
           spaces
@@ -105,7 +103,7 @@ class Model:
         """
         default = self._model.DEFAULT
 
-        if in_format == "tokenize":
+        if in_format is None:
             in_format = self._model.newTokenizer(default)
         else:
             in_format = udpipe.InputFormat.newInputFormat(in_format)
