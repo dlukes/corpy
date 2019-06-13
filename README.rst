@@ -2,8 +2,8 @@
 CorPy
 =====
 
-.. image:: https://readthedocs.org/projects/corpy/badge/?version=latest
-   :target: https://corpy.readthedocs.io/en/latest/?badge=latest
+.. image:: https://readthedocs.org/projects/corpy/badge/?version=stable
+   :target: https://corpy.readthedocs.io/en/stable/?badge=stable
    :alt: Documentation status
 
 .. image:: https://badge.fury.io/py/corpy.svg
@@ -35,7 +35,7 @@ Here's an idea of what you can do with CorPy:
 
    UDPipe_ has more features at the cost of being somewhat more complex: it does
    both `morphological tagging (including lemmatization) and syntactic parsing
-   <https://corpy.rtfd.io/en/latest/guides/udpipe.html>`__, and it handles a
+   <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__, and it handles a
    number of different input and output formats. You can also download
    `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for many
    different languages.
@@ -43,7 +43,7 @@ Here's an idea of what you can do with CorPy:
    By contrast, MorphoDiTa_ only has `pre-trained models for Czech and English
    <http://ufal.mff.cuni.cz/morphodita/users-manual>`__, and only performs
    `morphological tagging (including lemmatization)
-   <https://corpy.rtfd.io/en/latest/guides/morphodita.html>`__. However, its
+   <https://corpy.rtfd.io/en/stable/guides/morphodita.html>`__. However, its
    output is more straightforward -- it just splits your text into tokens and
    annotates them, whereas UDPipe can (depending on the model) introduce
    additional tokens necessary for a more explicit analysis, add multi-word
@@ -58,15 +58,15 @@ Here's an idea of what you can do with CorPy:
 .. _CoNLL-U: https://universaldependencies.org/format.html
 
 - `easily generate word clouds
-  <https://corpy.rtfd.io/en/latest/guides/vis.html>`__
+  <https://corpy.rtfd.io/en/stable/guides/vis.html>`__
 - `generate phonetic transcripts of Czech texts
-  <https://corpy.rtfd.io/en/latest/guides/phonetics_cs.html>`__
+  <https://corpy.rtfd.io/en/stable/guides/phonetics_cs.html>`__
 - `wrangle corpora in the vertical format
-  <https://corpy.rtfd.io/en/latest/guides/vertical.html>`__ devised originally
+  <https://corpy.rtfd.io/en/stable/guides/vertical.html>`__ devised originally
   for `CWB <http://cwb.sourceforge.net/>`__, used also by `(No)SketchEngine
   <https://nlp.fi.muni.cz/trac/noske/>`__
 - plus some `command line utilities
-  <https://corpy.rtfd.io/en/latest/guides/cli.html>`__
+  <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
 
 Installation
 ============
