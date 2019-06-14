@@ -660,7 +660,7 @@ six = ">=1.10.0"
 wcwidth = "*"
 
 [package.dependencies.more-itertools]
-python = ">2.7"
+python = ">=2.8"
 version = ">=4.0.0"
 
 [package.extras]
