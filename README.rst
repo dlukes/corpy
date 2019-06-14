@@ -14,6 +14,15 @@ CorPy
    :target: https://github.com/python/black
    :alt: Code style
 
+Installation
+============
+
+.. code:: bash
+
+   $ pip3 install corpy
+
+Only recent versions of Python 3 (3.6+) are supported by design.
+
 What is CorPy?
 ==============
 
@@ -73,20 +82,10 @@ Here's an idea of what you can do with CorPy:
 - plus some `command line utilities
   <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
 
-Installation
-============
-
-.. code:: bash
-
-   $ pip3 install corpy
-
-Requirements
-============
-
-Only recent versions of Python 3 (3.6+) are supported by design.
+.. development-marker
 
 Development
-===========
+==========
 
 Dependencies and building the docs
 ----------------------------------

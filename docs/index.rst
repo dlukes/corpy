@@ -1,7 +1,7 @@
 .. default-role:: py:obj
 
 .. include:: ../README.rst
-   :end-before: license-marker
+   :end-before: development-marker
 
 .. toctree::
    :maxdepth: 1
