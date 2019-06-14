@@ -10,6 +10,10 @@ CorPy
    :target: https://badge.fury.io/py/corpy
    :alt: PyPI package
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+   :target: https://github.com/python/black
+   :alt: Code style
+
 What is CorPy?
 ==============
 
@@ -33,12 +37,13 @@ Here's an idea of what you can do with CorPy:
 
    **Should I pick UDPipe or MorphoDiTa?**
 
-   UDPipe_ has more features at the cost of being somewhat more complex: it does
-   both `morphological tagging (including lemmatization) and syntactic parsing
-   <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__, and it handles a
-   number of different input and output formats. You can also download
-   `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for many
-   different languages.
+   UDPipe_ is the successor to MorphoDiTa_, extending and improving upon the
+   original codebase. It has more features at the cost of being somewhat more
+   complex: it does both `morphological tagging (including lemmatization) and
+   syntactic parsing <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__,
+   and it handles a number of different input and output formats. You can also
+   download `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for
+   many different languages.
 
    By contrast, MorphoDiTa_ only has `pre-trained models for Czech and English
    <http://ufal.mff.cuni.cz/morphodita/users-manual>`__, and only performs
@@ -79,6 +84,25 @@ Requirements
 ============
 
 Only recent versions of Python 3 (3.6+) are supported by design.
+
+Development
+===========
+
+Dependencies and building the docs
+----------------------------------
+
+The canonical dependency requirements are listed in ``pyproject.toml`` and
+frozen in ``poetry.lock``. However, in order to use ``autodoc`` to build the API
+docs, the package has to be installed, and ``corpy`` has dependencies that are
+too resource-intensive to build on ReadTheDocs.
+
+The solution is to use a dummy ``setup.py`` which lists *only* the dependencies
+needed to build the docs properly, and mock all other dependencies by listing
+them in ``autodoc_mock_imports`` in ``docs/conf.py``. This dummy ``setup.py`` is
+used to install ``corpy`` *only* on ReadTheDocs (via the appropriate config
+option in ``.readthedocs.yml``). The same goes for the ``MANIFEST.in`` file,
+which duplicates the ``tool.poetry.include`` entries in ``pyproject.toml`` for
+the sole benefit of ReadTheDocs.
 
 .. license-marker
 
