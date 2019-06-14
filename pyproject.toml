@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "corpy"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tools for processing language data."
 
 authors = ["David Lukes <dafydd.lukes@gmail.com>"]
