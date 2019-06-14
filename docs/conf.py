@@ -35,6 +35,21 @@ release = corpy.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ["sphinx.ext.autodoc"]
+# Mock most dependencies, because we want to install as few of them as possible
+# on ReadTheDocs (it's a pain, there are limits, etc.). NOTE: Keep this list
+# up-to-date with the deps listed in ../pyproject.toml!
+autodoc_mock_imports = [
+    # don't mock regex, or autodoc fails to import corpy.phonetics.cs
+    # "regex",
+    "lazy",
+    "lxml",
+    "matplotlib",
+    "wordcloud",
+    # just the top-level ufal module
+    "ufal",
+    "numpy",
+    "click",
+]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ["_templates"]
