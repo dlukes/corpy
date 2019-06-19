@@ -245,6 +245,12 @@ using the :func:`~corpy.udpipe.pprint_config` function:
       multiwordTokens=[],
       emptyNodes=[])]
 
+Let's turn digest back on to save space below.
+
+.. code:: python
+
+   >>> pprint_config(digest=True)
+
 Input and output formats
 ========================
 
@@ -303,3 +309,91 @@ out:
    2	sněžit	sněžit	VERB	Vf--------A----	Aspect=Imp|Polarity=Pos|VerbForm=Inf	0	root	_	_
    3	.	.	PUNCT	Z:-------------	_	2	punct	_	_
    <BLANKLINE>
+
+Format conversion
+=================
+
+The module can also be used just for loading/dumping data in any of the formats
+supported by UDPipe. That's what the :func:`~corpy.udpipe.load` and
+:func:`~corpy.udpipe.dump` functions are for. Input and output formats default
+to CoNLL-U.
+
+.. code:: python
+
+   >>> from corpy.udpipe import load, dump
+   >>> sents = list(load(horizontal, "horizontal"))
+   >>> pprint(sents)
+   [Sentence(
+      comments=['# newdoc', '# newpar', '# sent_id = 1'],
+      words=[
+        Word(id=0, <root>),
+        Word(id=1, form='Je'),
+        Word(id=2, form='zima'),
+        Word(id=3, form='.')]),
+    Sentence(
+      comments=['# sent_id = 2'],
+      words=[
+        Word(id=0, <root>),
+        Word(id=1, form='Bude'),
+        Word(id=2, form='sněžit'),
+        Word(id=3, form='.')])]
+   >>> print("".join(dump(sents)), end="")  # doctest: +NORMALIZE_WHITESPACE
+   # newdoc
+   # newpar
+   # sent_id = 1
+   1	Je	_	_	_	_	_	_	_	_
+   2	zima	_	_	_	_	_	_	_	_
+   3	.	_	_	_	_	_	_	_	_
+   <BLANKLINE>
+   # sent_id = 2
+   1	Bude	_	_	_	_	_	_	_	_
+   2	sněžit	_	_	_	_	_	_	_	_
+   3	.	_	_	_	_	_	_	_	_
+   <BLANKLINE>
+
+You can mix and match this with tagging and parsing the data using a
+:class:`~corpy.udpipe.Model`, if you prefer this more incremental approach:
+
+.. code:: python
+
+   >>> m.tag(sents[0])
+   >>> m.parse(sents[0])
+   >>> pprint(sents)
+   [Sentence(
+      comments=['# newdoc', '# newpar', '# sent_id = 1'],
+      words=[
+        Word(id=0, <root>),
+        Word(id=1,
+             form='Je',
+             lemma='být',
+             xpostag='VB-S---3P-AA---',
+             upostag='VERB',
+             feats='Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
+             head=0,
+             deprel='root'),
+        Word(id=2,
+             form='zima',
+             lemma='zima',
+             xpostag='NNFS1-----A----',
+             upostag='NOUN',
+             feats='Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos',
+             head=1,
+             deprel='nsubj'),
+        Word(id=3,
+             form='.',
+             lemma='.',
+             xpostag='Z:-------------',
+             upostag='PUNCT',
+             head=1,
+             deprel='punct')]),
+    Sentence(
+      comments=['# sent_id = 2'],
+      words=[
+        Word(id=0, <root>),
+        Word(id=1, form='Bude'),
+        Word(id=2, form='sněžit'),
+        Word(id=3, form='.')])]
+
+As you can see, only the first sentence has been tagged and parsed. Note that
+the :meth:`~corpy.udpipe.Model.tag` and :meth:`~corpy.udpipe.Model.parse`
+methods modify the sentence in place!

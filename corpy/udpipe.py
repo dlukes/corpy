@@ -54,6 +54,7 @@ class Model:
         self._model = udpipe.Model.load(model_path)
         if self._model is None:
             raise RuntimeError(f"Unable to load model from {model_path!r}!")
+        self._default = self._model.DEFAULT
 
     def process(self, text, *, tag=True, parse=True, in_format=None, out_format=None):
         """Process input text, yielding sentences one by one.
@@ -101,10 +102,8 @@ class Model:
         <http://ufal.mff.cuni.cz/udpipe/api-reference>`__.
 
         """
-        default = self._model.DEFAULT
-
         if in_format is None:
-            in_format = self._model.newTokenizer(default)
+            in_format = self._model.newTokenizer(self._default)
         else:
             in_format = udpipe.InputFormat.newInputFormat(in_format)
             if in_format is None:
@@ -120,20 +119,99 @@ class Model:
         sent = udpipe.Sentence()
         while in_format.nextSentence(sent, error):
             if tag:
-                self._model.tag(sent, default)
+                self.tag(sent)
             if parse:
-                self._model.parse(sent, default)
+                self.parse(sent)
             if out_format is None:
                 yield sent
             else:
                 yield out_format.writeSentence(sent)
             sent = udpipe.Sentence()
-            if error.occurred():
-                raise UdpipeError(error.message)
+        if error.occurred():
+            raise UdpipeError(error.message)
         if out_format is not None:
             end = out_format.finishDocument()
             if end != "":
                 yield end
+
+    def tag(self, sent):
+        """Perform morphological tagging on sentence.
+
+        Modifies ``sent`` in place.
+
+        :param sent: Sentence to tag.
+        :type sent: ufal.udpipe.Sentence
+
+        """
+        # NOTE: like InputFormat.nextSentence, Model.tag and Model.parse accept
+        # a ProcessingError argument. However, the udpipe_model.py example in
+        # the UDPipe repo only passes the error argument to nextSentence,
+        # probably on the assumption that input format errors are the only ones
+        # which can be caused by users (and therefore will also routinely have
+        # to be resolved by them). Other errors are bugs which should be fixed
+        # by UDPipe maintainers, so they're ignored for simplicity's sake. For
+        # the time being, we follow the same rationale here.
+        self._model.tag(sent, self._default)
+
+    def parse(self, sent):
+        """Perform syntactic parsing on sentence.
+
+        Modifies ``sent`` in place.
+
+        :param sent: Sentence to parse.
+        :type sent: ufal.udpipe.Sentence
+
+        """
+        self._model.parse(sent, self._default)
+
+
+def load(corpus, in_format="conllu"):
+    """Load corpus in input format.
+
+    :param corpus: The data to load.
+    :type corpus: str
+    :param in_format: Cf. the documentation of :meth:`Model.process`.
+    :type in_format: str
+    :return: A generator of sentences (:class:`ufal.udpipe.Sentence`).
+
+    """
+    in_format = udpipe.InputFormat.newInputFormat(in_format)
+    if in_format is None:
+        raise RuntimeError(f"Cannot create input format {in_format!r}.")
+    in_format.setText(corpus)
+    error = udpipe.ProcessingError()
+    sent = udpipe.Sentence()
+    while in_format.nextSentence(sent, error):
+        yield sent
+        sent = udpipe.Sentence()
+    if error.occurred():
+        raise UdpipeError(error.message)
+
+
+def dump(sent_or_sents, out_format="conllu"):
+    """Dump sentence or sentences in output format.
+
+    :param sent_or_sents: The data to dump.
+    :type corpus: :class:`ufal.udpipe.Sentence`, or iterable thereof
+    :param out_format: Cf. the documentation of :meth:`Model.process`.
+    :type out_format: str
+    :return: A generator of strings, corresponding to the serialized sentences.
+        One final additional string may contain any closing markup, if required
+        by the output format.
+
+    """
+    out_format = udpipe.OutputFormat.newOutputFormat(out_format)
+    if out_format is None:
+        raise RuntimeError(f"Cannot create output format {out_format!r}.")
+
+    if isinstance(sent_or_sents, udpipe.Sentence):
+        yield out_format.writeSentence(sent_or_sents)
+    else:
+        for sent in sent_or_sents:
+            yield out_format.writeSentence(sent)
+    end = out_format.finishDocument()
+    if end != "":
+        yield end
 
 
 def _pprint_token(token, printer, cycle):
