@@ -13,10 +13,11 @@ Overview
 ========
 
 UDPipe_ is a fast and convenient library for stochastic morphological tagging
-(including lemmatization) and syntactic parsing of text. :mod:`corpy.udpipe`
-aims to give easy access to the most commonly used features of the library; for
-more advanced use cases, you might need to use the more lower-level ufal.udpipe_
-package, on top of which this module is built.
+(including lemmatization) and syntactic parsing of text. The :mod:`corpy.udpipe`
+module aims to give easy access to the most commonly used features of the
+library; for more advanced use cases, including if you need speedups in
+performance critical code, you might need to use the more lower-level
+ufal.udpipe_ package, on top of which this module is built.
 
 .. _UDPipe: http://ufal.mff.cuni.cz/udpipe
 .. _ufal.udpipe: https://pypi.org/project/ufal.udpipe/
@@ -268,11 +269,11 @@ and output it in the CoNLL-U format. You can do it like so:
 
 .. code:: python
 
-   >>> horizontal = """Je zima.
-   ... Bude sněžit."""
+   >>> horizontal = """Je zima .
+   ... Bude sněžit ."""
    >>> conllu_sents = list(m.process(horizontal, in_format="horizontal", out_format="conllu"))
    >>> conllu_sents
-   ['# newdoc\n# newpar\n# sent_id = 1\n1\tJe\tbýt\tVERB\tVB-S---3P-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act\t0\troot\t_\t_\n2\tzima.\tzima.\tPUNCT\tZ:-------------\t_\t1\tpunct\t_\t_\n\n', '# sent_id = 2\n1\tBude\tbýt\tVERB\tVB-S---3F-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act\t0\troot\t_\t_\n2\tsněžit.\tsněžit.\tPUNCT\tZ:-------------\t_\t1\tpunct\t_\t_\n\n']
+   ['# newdoc\n# newpar\n# sent_id = 1\n1\tJe\tbýt\tVERB\tVB-S---3P-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act\t0\troot\t_\t_\n2\tzima\tzima\tNOUN\tNNFS1-----A----\tCase=Nom|Gender=Fem|Number=Sing|Polarity=Pos\t1\tnsubj\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t1\tpunct\t_\t_\n\n', '# sent_id = 2\n1\tBude\tbýt\tAUX\tVB-S---3F-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act\t2\taux\t_\t_\n2\tsněžit\tsněžit\tVERB\tVf--------A----\tAspect=Imp|Polarity=Pos|VerbForm=Inf\t0\troot\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t2\tpunct\t_\t_\n\n']
 
 That's a bit messy, but trust me that ``conllu_sents`` is just a list of two
 strings, each string representing one sentence. Or, if you don't trust me:
@@ -294,9 +295,11 @@ out:
    # newpar
    # sent_id = 1
    1	Je	být	VERB	VB-S---3P-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act	0	root	_	_
-   2	zima.	zima.	PUNCT	Z:-------------	_	1	punct	_	_
+   2	zima	zima	NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos	1	nsubj	_	_
+   3	.	.	PUNCT	Z:-------------	_	1	punct	_	_
    <BLANKLINE>
    # sent_id = 2
-   1	Bude	být	VERB	VB-S---3F-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act	0	root	_	_
-   2	sněžit.	sněžit.	PUNCT	Z:-------------	_	1	punct	_	_
+   1	Bude	být	AUX	VB-S---3F-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act	2	aux	_	_
+   2	sněžit	sněžit	VERB	Vf--------A----	Aspect=Imp|Polarity=Pos|VerbForm=Inf	0	root	_	_
+   3	.	.	PUNCT	Z:-------------	_	2	punct	_	_
    <BLANKLINE>

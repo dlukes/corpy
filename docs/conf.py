@@ -35,6 +35,7 @@ release = corpy.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ["sphinx.ext.autodoc"]
+autodoc_member_order = "bysource"
 # Mock most dependencies, because we want to install as few of them as possible
 # on ReadTheDocs (it's a pain, there are limits, etc.). NOTE: Keep this list
 # up-to-date with the deps listed in ../pyproject.toml!

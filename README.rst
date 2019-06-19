@@ -85,7 +85,7 @@ Here's an idea of what you can do with CorPy:
 .. development-marker
 
 Development
-==========
+===========
 
 Dependencies and building the docs
 ----------------------------------
