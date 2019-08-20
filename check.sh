@@ -3,6 +3,8 @@
 set -e
 cd ${0:a:h}
 
+source $(poetry env info -p)/bin/activate
+
 udpipe_model=czech-pdt-ud-2.4-190531.udpipe
 if [[ ! -f  $udpipe_model ]]; then
   >&2 echo "Fetching $udpipe_model..."
