@@ -36,11 +36,9 @@ The short URL to the docs is: https://corpy.rtfd.io/
 
 Here's an idea of what you can do with CorPy:
 
-- add linguistic annotation to raw textual data using either UDPipe_ or
-  MorphoDiTa_
-
-.. _UDPipe: http://ufal.mff.cuni.cz/udpipe
-.. _MorphoDiTa: http://ufal.mff.cuni.cz/morphodita
+- add linguistic annotation to raw textual data using either `UDPipe
+  <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__ or `MorphoDiTa
+  <https://corpy.rtfd.io/en/stable/guides/morphodita.html>`__
 
 .. note::
 
@@ -68,6 +66,8 @@ Here's an idea of what you can do with CorPy:
    MorphoDiTa can also help you if you just want to tokenize text and don't have
    a language model available.
 
+.. _UDPipe: http://ufal.mff.cuni.cz/udpipe
+.. _MorphoDiTa: http://ufal.mff.cuni.cz/morphodita
 .. _UniversalDependencies: https://universaldependencies.org
 .. _CoNLL-U: https://universaldependencies.org/format.html
 
