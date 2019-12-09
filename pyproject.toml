@@ -34,7 +34,7 @@ pylint = "^2.3"
 pydocstyle = "^3.0"
 mypy = "^0.701.0"
 # auto-formatting
-black = {version = "*", allows-prereleases = true}
+black = {version = "*", allow-prereleases = true}
 # refactoring; TODO: not necessary if using new language server in VSCode
 # ("python.jediEnabled" = false)
 rope = "^0.14.0"
