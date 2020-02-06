@@ -39,7 +39,7 @@ class Tokenizer:
         """
         self = Tokenizer("generic")
         LOG.info("Loading tagger.")
-        tagger = ufal.Tagger.load(tagger_path)
+        tagger = ufal.Tagger.load(str(tagger_path))
         self.tokenizer_constructor = tagger.newTokenizer
         if self.tokenizer_constructor() is None:
             raise RuntimeError(f"The tagger {tagger_path} has no associated tokenizer.")

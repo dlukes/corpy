@@ -21,7 +21,7 @@ class Tagger:
     """A MorphoDiTa morphological tagger and lemmatizer.
 
     :param tagger_path: Path to the pre-compiled tagging models to load.
-    :type tagger_path: str
+    :type tagger_path: str or pathlib.Path
 
     """
 
@@ -37,7 +37,7 @@ class Tagger:
     def __init__(self, tagger_path):
         self._tagger_path = tagger_path
         LOG.info("Loading tagger.")
-        self._tagger = ufal.Tagger.load(tagger_path)
+        self._tagger = ufal.Tagger.load(str(tagger_path))
         if self._tagger is None:
             raise RuntimeError(f"Unable to load tagger from {tagger_path!r}!")
         self._morpho = self._tagger.getMorpho()

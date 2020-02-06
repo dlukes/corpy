@@ -45,13 +45,13 @@ class Model:
     """A UDPipe model for tagging and parsing text.
 
     :param model_path: Path to the pre-compiled UDPipe model to load.
-    :type model_path: str
+    :type model_path: str or pathlib.Path
 
     """
 
     def __init__(self, model_path):
         LOG.info("Loading model.")
-        self._model = udpipe.Model.load(model_path)
+        self._model = udpipe.Model.load(str(model_path))
         if self._model is None:
             raise RuntimeError(f"Unable to load model from {model_path!r}!")
         self._default = self._model.DEFAULT
