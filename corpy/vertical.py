@@ -9,7 +9,7 @@
 import sys
 import gzip
 import os.path as osp
-from typing import List
+from typing import List, NamedTuple
 
 import re
 import datetime as dt
@@ -19,10 +19,24 @@ import numpy as np
 
 __all__ = ["Vertical", "Syn2015Vertical", "ipm", "arf"]
 
-Structure = namedtuple("Structure", "name attrs")
-UtklTag = namedtuple(
-    "UtklTag", "pos sub gen num case pgen pnum pers tense grad neg act p13 p14 var asp"
-)
+
+class UtklTag(NamedTuple):
+    pos: str
+    sub: str
+    gen: str
+    num: str
+    case: str
+    pgen: str
+    pnum: str
+    pers: str
+    tense: str
+    grad: str
+    neg: str
+    act: str
+    p13: str
+    p14: str
+    var: str
+    asp: str
 
 
 class Vertical:

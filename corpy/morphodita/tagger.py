@@ -1,7 +1,7 @@
 """An interface to MorphoDiTa taggers.
 
 """
-from collections import namedtuple
+from typing import NamedTuple
 from collections.abc import Iterable
 from lazy import lazy
 from functools import lru_cache
@@ -10,7 +10,11 @@ import ufal.morphodita as ufal
 
 from . import LOG
 
-Token = namedtuple("Token", "word lemma tag")
+
+class Token(NamedTuple):
+    word: str
+    lemma: str
+    tag: str
 
 
 class Tagger:
