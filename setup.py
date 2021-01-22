@@ -13,5 +13,5 @@ setup(
     # just the packages required to *build* the docs (either because they do the
     # building, or because they can't be properly mocked by the builder); most
     # of the actual dependencies are mocked via autodoc_mock_imports
-    install_requires=["regex", "sphinx>=2.0,<=3.0", "sphinx-rtd-theme"],
+    install_requires=["regex", "sphinx>=3.0,<=4.0", "sphinx-rtd-theme"],
 )
