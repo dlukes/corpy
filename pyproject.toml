@@ -14,12 +14,14 @@ include = ["corpy/phonetics/*.tsv"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-regex = "^2019.4"
+# regex is versioned using calver plus it sticks to the API of stdlib's re
+# module, so whichever latest version is fine
+regex = "*"
 lazy = "^1.4"
-lxml = "^4.3"
+lxml = "^4.6.1"
 matplotlib = "^3.1"
-wordcloud = "^1.5"
-"ufal.morphodita" = "^1.9"
+wordcloud = "^1.8.1"
+"ufal.morphodita" = "^1.10"
 "ufal.udpipe" = "^1.2"
 numpy = "^1.16"
 click = "^7.0"
@@ -31,23 +33,14 @@ pytest-xdist = "^1.28"
 # python linters
 flake8 = "^3.7"
 pylint = "^2.3"
-pydocstyle = "^3.0"
-mypy = "^0.701.0"
-# auto-formatting
-black = {version = "*", allow-prereleases = true}
-# refactoring; TODO: not necessary if using new language server in VSCode
-# ("python.jediEnabled" = false)
-rope = "^0.14.0"
-# rst linter
-doc8 = "^0.8.0"
 twine = "^1.13"
-sphinx = "^2.0"
-sphinx-rtd-theme = "^0.4.3"
+sphinx = "^3.4.3"
+sphinx-rtd-theme = "^0.5.1"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=1"]
 build-backend = "poetry.masonry.api"
