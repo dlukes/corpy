@@ -209,16 +209,12 @@ class ShuffledSyn2015Vertical(Syn2015Vertical):
 
 
 def ipm(occurrences, N):
-    """Relative frequency of `occurrences` in corpus, in instances per million.
-
-    """
+    """Relative frequency of `occurrences` in corpus, in instances per million."""
     return 1e6 * len(occurrences) / N
 
 
 def arf(occurrences, N):
-    """Average reduced frequency of `occurrences` in corpus.
-
-    """
+    """Average reduced frequency of `occurrences` in corpus."""
     freq = len(occurrences)
     if freq == 0:
         return 0
