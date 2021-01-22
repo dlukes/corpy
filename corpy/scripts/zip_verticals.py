@@ -13,7 +13,7 @@ LOGLEVELS = [
 
 
 def print_position(lines, line_no):
-    lines = [l.strip(" \n").split("\t") for l in lines]
+    lines = [line.strip(" \n").split("\t") for line in lines]
     word = lines[0][0]
     position = [word]
     for i, line in enumerate(lines):
@@ -54,7 +54,7 @@ def main(lvl, verbose, quiet, files):
     files = files if files else (cli.File("rt", encoding="utf-8")("-"),)
     LOG.info(f"Zipping the following vertical files: {files}")
     for line_no, lines in enumerate(zip(*files)):
-        if any("\t" in l for l in lines):
+        if any("\t" in line for line in lines):
             print_position(lines, line_no)
         else:
             print(lines[0].strip(" \n"))

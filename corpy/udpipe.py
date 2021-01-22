@@ -262,7 +262,7 @@ def _pprint_seq(seq, printer, cycle):
     # Unfortunately, I haven't yet figured out a way to adjust this depending
     # on whether _pprint_seq is called from _pprint_sent or not, so it will
     # have to stay duplicated for the time being.
-    with printer.group(1, f"[", "]"):
+    with printer.group(1, "[", "]"):
         for j, elem in enumerate(seq):
             if j:
                 printer.text(",")
