@@ -23,6 +23,18 @@ Installation
 
 Only recent versions of Python 3 (3.6+) are supported by design.
 
+Help and feedback
+=================
+
+The project is developed on GitHub_. You can ask for help via `GitHub
+discussions`_ and report bugs and give other kinds of feedback via `GitHub
+issues`_. Support is provided gladly, time and other engagements permitting, but
+cannot be guaranteed.
+
+.. _GitHub: https://github.com/dlukes/corpy
+.. _GitHub discussions: https://github.com/dlukes/corpy/discussions
+.. _GitHub issues: https://github.com/dlukes/corpy/issues
+
 What is CorPy?
 ==============
 
