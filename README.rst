@@ -26,6 +26,9 @@ Only recent versions of Python 3 (3.6+) are supported by design.
 Help and feedback
 =================
 
+If you get stuck, it's always a good idea to start by searching the
+documentation, the short URL to which is https://corpy.rtfd.io/.
+
 The project is developed on GitHub_. You can ask for help via `GitHub
 discussions`_ and report bugs and give other kinds of feedback via `GitHub
 issues`_. Support is provided gladly, time and other engagements permitting, but
@@ -43,8 +46,6 @@ mutually integrated tools for dealing with linguistic data. It abstracts away
 functionality which is often needed in practice for teaching and/or day to day
 work at the `Czech National Corpus <https://korpus.cz>`__, without aspiring to
 be a fully featured or consistent NLP framework.
-
-The short URL to the docs is: https://corpy.rtfd.io/
 
 Here's an idea of what you can do with CorPy:
 
