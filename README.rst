@@ -19,7 +19,7 @@ Installation
 
 .. code:: bash
 
-   $ pip3 install corpy
+   $ python3 -m pip install corpy
 
 Only recent versions of Python 3 (3.6+) are supported by design.
 
