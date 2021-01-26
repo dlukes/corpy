@@ -36,21 +36,6 @@ release = corpy.__version__
 # ones.
 extensions = ["sphinx.ext.autodoc"]
 autodoc_member_order = "bysource"
-# Mock most dependencies, because we want to install as few of them as possible
-# on ReadTheDocs (it's a pain, there are limits, etc.). NOTE: Keep this list
-# up-to-date with the deps listed in ../pyproject.toml!
-autodoc_mock_imports = [
-    # don't mock regex, or autodoc fails to import corpy.phonetics.cs
-    # "regex",
-    "lazy",
-    "lxml",
-    "matplotlib",
-    "wordcloud",
-    # just the top-level ufal module
-    "ufal",
-    "numpy",
-    "click",
-]
 
 # Add any paths that contain templates here, relative to this directory.
 # templates_path = ["_templates"]
@@ -66,7 +51,7 @@ autodoc_mock_imports = [
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_rtd_theme"
+html_theme = "furo"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

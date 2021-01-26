@@ -5,5 +5,6 @@ formats:
 
 python:
   install:
-    - path: .
-      method: setuptools
+    - requirements: docs/requirements.txt
+    - method: pip
+      path: .

@@ -3,7 +3,6 @@
 cd "$(dirname "$(realpath "$0")")"
 source $(poetry env info -p)/bin/activate ||
   { >&2 echo 'Failed to activate project virtualenv!' && exit 1; }
-set -e
 
 udpipe_model=czech-pdt-ud-2.4-190531.udpipe
 if [ ! -f "$udpipe_model" ]; then
@@ -26,6 +25,14 @@ fi
 flake8 corpy
 pylint corpy
 pytest -n auto
+
+# update ReadTheDocs requirements
+rtd_reqs=docs/requirements.txt
+echo "# ---8<--- MANAGED BY check.sh; DO NOT EDIT! --->8---" >"$rtd_reqs"
+poetry export --dev --without-hashes |
+  grep -P '^(sphinx|furo)==' >>"$rtd_reqs"
+echo "# ---8<----------------------------------------->8---" >>"$rtd_reqs"
+
 >&2 echo "Building docs; if it hangs, re-run without '-j auto' and redirection to get helpful error output."
 # -n is nit-picky mode, which checks for missing references; however, we're only
 # interested in missing references to stuff defined as part of corpy, and not
@@ -35,6 +42,7 @@ sphinx-build -j auto -Ean docs docs/_build 2>&1 |
   { grep -Pv "IPython session not found" || [ $? == 1 ]; }
 # possibly also check external links every now and then
 # sphinx-build -b linkcheck docs docs/_build
+
 rm -rf dist
 poetry build
 twine check dist/*

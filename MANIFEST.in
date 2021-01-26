@@ -1,2 +1,0 @@
-# Dummy manifest for the dummy setup.py for ReadTheDocs
-include corpy/phonetics/*.tsv

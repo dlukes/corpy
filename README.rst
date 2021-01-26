@@ -90,18 +90,14 @@ Development
 Dependencies and building the docs
 ----------------------------------
 
-The canonical dependency requirements are listed in ``pyproject.toml`` and
-frozen in ``poetry.lock``. However, in order to use ``autodoc`` to build the API
-docs, the package has to be installed, and ``corpy`` has dependencies that are
-too resource-intensive to build on ReadTheDocs.
-
-The solution is to use a dummy ``setup.py`` which lists *only* the dependencies
-needed to build the docs properly, and mock all other dependencies by listing
-them in ``autodoc_mock_imports`` in ``docs/conf.py``. This dummy ``setup.py`` is
-used to install ``corpy`` *only* on ReadTheDocs (via the appropriate config
-option in ``.readthedocs.yml``). The same goes for the ``MANIFEST.in`` file,
-which duplicates the ``tool.poetry.include`` entries in ``pyproject.toml`` for
-the sole benefit of ReadTheDocs.
+``corpy`` needs to be installed in the ReadTheDocs virtualenv for ``autodoc`` to
+work. That's configured in ``.readthedocs.yml``. However, ``pip`` doesn't
+install ``[tool.poetry.dev-dependencies]``, which contain the Sphinx version and
+theme we're using. Maybe there's a way of forcing that, but we probably don't
+want to anyway -- it's a waste of time to install linters, testing frameworks
+etc. that won't be used. So instead, we have a ``docs/requirements.txt`` file
+managed by ``check.sh`` which only contains Sphinx + the theme, and which we
+specify via ``.readthedocs.yml``.
 
 .. license-marker
 
