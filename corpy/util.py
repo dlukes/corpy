@@ -1,8 +1,11 @@
 """Small utility functions.
 
 """
+import inspect
+import builtins
 from pprint import pprint
 from contextlib import contextmanager
+from typing import Optional, Iterable
 
 
 def _head_gen(items, first_n):
@@ -55,44 +58,73 @@ def cmp(lhs, rhs, test="__eq__"):
 @contextmanager
 def clean_env(
     *,
-    blacklist=None,
-    whitelist=None,
-    keep_dunder=True,
-    keep_callables=True,
-    keep_sunder=False,
+    blacklist: Optional[Iterable[str]] = None,
+    whitelist: Optional[Iterable[str]] = None,
+    restore_builtins: bool = True,
+    keep_callables: bool = True,
+    keep_dunder: bool = True,
+    keep_sunder: bool = False,
 ):
     """Run a block of code in a sanitized global environment.
 
-    This is useful e.g. for testing answers in student assignments,
-    because it will ensure that functions which accidentally capture
-    global variables instead of using arguments fail.
+    This is useful e.g. for testing answers in student assignments, because it
+    will ensure that functions which accidentally capture global variables
+    instead of using arguments fail. By default, it also restores overwritten
+    builtins. The original environment is restored afterwards.
 
-    By default, global variables starting with a double underscore and
-    callables are kept. A whitelist of additional variables to keep can
-    also be provided. The environment is restored afterwards.
+    :param blacklist: A list of global variable names to always remove,
+        irrespective of the other options.
+    :param whitelist: A list of global variable names to always keep,
+        irrespective of the other options.
+    :param restore_builtins: Make sure that the conventional names for built-in
+        objects point to those objects (beginners often use ``list`` or
+        ``sorted`` as variable names).
+    :param keep_callables: Keep variables which refer to callables.
+    :param keep_dunder: Keep variables whose name starts with a double
+        underscore.
+    :param keep_sunder: Keep variables whose name starts with a single
+        underscore.
 
     """
-    if blacklist and whitelist:
-        raise ValueError("Only one of blacklist or whitelist can be specified.")
+    blacklist, whitelist = set(blacklist or ()), set(whitelist or ())
+    bw_intersection = blacklist & whitelist
+    if bw_intersection:
+        raise ValueError(f"Blacklist and whitelist overlap: {bw_intersection}")
 
-    hidden_globs = {}
-    if blacklist:
-        for name in blacklist:
-            value = globals().pop(name)
-            hidden_globs[name] = value
-    else:
-        for name, value in list(globals().items()):
-            is_dunder = name.startswith("__")
-            if not (
-                (keep_dunder and is_dunder)
-                or (keep_callables and callable(value))
-                or (keep_sunder and name.startswith("_") and not is_dunder)
-                or (whitelist and name in whitelist)
-            ):
-                del globals()[name]
-                hidden_globs[name] = value
+    # this parent frame is in contextlib, the grandparent frame should be the
+    # code that called `with clean_env(): ...`
+    globals_to_prune = inspect.currentframe().f_back.f_back.f_globals
+    pruned_globals = {}
+    # NOTE: We'll be updating the globals dict as part of the loop, so we need
+    # to store the items in a list, otherwise our iterator would be invalidated
+    # by the update.
+    for name, value in list(globals_to_prune.items()):
+        remove, restore = True, False
+        builtin = getattr(builtins, name, None)
+
+        if name in blacklist:
+            pass
+        elif name in whitelist:
+            remove = False
+        elif restore_builtins and builtin is not None:
+            restore = True
+        elif keep_callables and callable(value):
+            remove = False
+        elif keep_dunder and name.startswith("__"):
+            remove = False
+        elif keep_sunder and name.startswith("_"):
+            remove = False
+        else:
+            pass
+
+        if remove:
+            del globals_to_prune[name]
+            pruned_globals[name] = value
+
+        if restore:
+            globals_to_prune[name] = builtin
 
     try:
         yield
     finally:
-        globals().update(hidden_globs)
+        globals_to_prune.update(pruned_globals)
