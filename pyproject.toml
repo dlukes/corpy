@@ -36,6 +36,7 @@ twine = "^1.13"
 # python linters
 flake8 = "^3.7"
 pylint = "^2.3"
+jedi = "0.17.2"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"
