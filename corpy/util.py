@@ -18,6 +18,9 @@ def _head_gen(items, first_n):
 def head(collection, first_n=None):
     """Inspect `collection`, truncated if too long.
 
+    >>> head(list(range(1_000)))
+    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
     If ``first_n=None``, an appropriate value is determined based on the type
     of the collection.
 
@@ -68,10 +71,28 @@ def clean_env(
 ):
     """Run a block of code in a sanitized global environment.
 
+    A context manager which temporarily removes global variables from scope:
+
+    >>> foo = 42
+    >>> with clean_env():
+    ...     foo
+    ...
+    Traceback (most recent call last):
+      ...
+    NameError: name 'foo' is not defined
+
+    The original environment is restored at the end of the block:
+
+    >>> foo
+    42
+
+    By default, `clean_env` tries to be clever and leave e.g. functions alone,
+    as well as other objects which are likely to be "legitimate" globals. It
+    also restores overwritten builtins.
+
     This is useful e.g. for testing answers in student assignments, because it
     will ensure that functions which accidentally capture global variables
-    instead of using arguments fail. By default, it also restores overwritten
-    builtins. The original environment is restored afterwards.
+    instead of using arguments fail.
 
     :param blacklist: A list of global variable names to always remove,
         irrespective of the other options.
