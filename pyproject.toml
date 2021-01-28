@@ -21,6 +21,9 @@ lazy = "^1.4"
 lxml = "^4.6.1"
 matplotlib = "^3.1"
 wordcloud = "^1.8.1"
+# TODO: pinned because otherwise, wordcloud segfaults; unpin once
+# https://github.com/python-pillow/Pillow/issues/4225 is resolved
+Pillow = "6.2.2"
 "ufal.morphodita" = "^1.10"
 "ufal.udpipe" = "^1.2"
 numpy = "^1.16"
