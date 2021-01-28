@@ -43,6 +43,14 @@ def test_keep_callables_works():
         assert globals().get("foo") is None
 
 
+def test_keep_upper_works():
+    globals().update(FOO_BAR=1)
+    with clean_env():
+        assert globals().get("FOO_BAR") == 1
+    with clean_env(keep_upper=False):
+        assert globals().get("FOO_BAR") is None
+
+
 def test_keep_dunder_works():
     globals().update(__dunder=1)
     with clean_env():

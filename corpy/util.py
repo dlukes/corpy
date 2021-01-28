@@ -62,6 +62,7 @@ def clean_env(
     whitelist: Optional[Iterable[str]] = None,
     restore_builtins: bool = True,
     keep_callables: bool = True,
+    keep_upper: bool = True,
     keep_dunder: bool = True,
     keep_sunder: bool = False,
 ):
@@ -80,6 +81,9 @@ def clean_env(
         objects point to those objects (beginners often use ``list`` or
         ``sorted`` as variable names).
     :param keep_callables: Keep variables which refer to callables.
+    :param keep_upper: Keep variables with all-uppercase identifiers
+        (underscores allowed), which are likely to be intentional global
+        variables (constants and the like).
     :param keep_dunder: Keep variables whose name starts with a double
         underscore.
     :param keep_sunder: Keep variables whose name starts with a single
@@ -109,6 +113,8 @@ def clean_env(
         elif restore_builtins and builtin is not None:
             restore = True
         elif keep_callables and callable(value):
+            remove = False
+        elif keep_upper and name.isupper():
             remove = False
         elif keep_dunder and name.startswith("__"):
             remove = False
