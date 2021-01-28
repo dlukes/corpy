@@ -14,7 +14,7 @@ def test_size_in_pixels():
     assert str(exc_info.value) == "`unit` must be one of ('in', 'cm')."
 
 
-def test__optimize_dimensions():
+def test_optimize_dimensions():
     # canvas gets shrunk for computation with scale factor for output
     # when fast == True...
     assert vis._optimize_dimensions((10000, 10000), True, 800) == (800, 800, 12.5)
@@ -29,7 +29,7 @@ def test__optimize_dimensions():
     assert vis._optimize_dimensions((500, 500), True, 800) == (500, 500, 1)
 
 
-def test__elliptical_mask():
+def test_elliptical_mask():
     assert np.all(
         vis._elliptical_mask(5, 5)
         == np.array(
