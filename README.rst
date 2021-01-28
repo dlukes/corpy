@@ -52,6 +52,18 @@ Here's an idea of what you can do with CorPy:
 - add linguistic annotation to raw textual data using either `UDPipe
   <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__ or `MorphoDiTa
   <https://corpy.rtfd.io/en/stable/guides/morphodita.html>`__
+- `easily generate word clouds
+  <https://corpy.rtfd.io/en/stable/guides/vis.html>`__
+- `generate phonetic transcripts of Czech texts
+  <https://corpy.rtfd.io/en/stable/guides/phonetics_cs.html>`__
+- `wrangle corpora in the vertical format
+  <https://corpy.rtfd.io/en/stable/guides/vertical.html>`__ devised originally
+  for `CWB <http://cwb.sourceforge.net/>`__, used also by `(No)SketchEngine
+  <https://nlp.fi.muni.cz/trac/noske/>`__
+- plus some utilities for `interactive Python coding
+  <https://corpy.rtfd.io/en/stable/guides/util.html>`__ (e.g. with Jupyter
+  notebooks in  `JupyterLab <https://jupyterlab.rtfd.io>`__) and the `command
+  line <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
 
 .. note::
 
@@ -83,17 +95,6 @@ Here's an idea of what you can do with CorPy:
 .. _MorphoDiTa: http://ufal.mff.cuni.cz/morphodita
 .. _UniversalDependencies: https://universaldependencies.org
 .. _CoNLL-U: https://universaldependencies.org/format.html
-
-- `easily generate word clouds
-  <https://corpy.rtfd.io/en/stable/guides/vis.html>`__
-- `generate phonetic transcripts of Czech texts
-  <https://corpy.rtfd.io/en/stable/guides/phonetics_cs.html>`__
-- `wrangle corpora in the vertical format
-  <https://corpy.rtfd.io/en/stable/guides/vertical.html>`__ devised originally
-  for `CWB <http://cwb.sourceforge.net/>`__, used also by `(No)SketchEngine
-  <https://nlp.fi.muni.cz/trac/noske/>`__
-- plus some `command line utilities
-  <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
 
 .. development-marker
 

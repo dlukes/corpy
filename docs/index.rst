@@ -12,6 +12,7 @@
    guides/vis.rst
    guides/phonetics_cs.rst
    guides/vertical.rst
+   guides/util.rst
    guides/cli.rst
 
 .. toctree::
