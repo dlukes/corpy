@@ -1,7 +1,7 @@
 #!/bin/sh
 
 cd "$(dirname "$(realpath "$0")")"
-source $(poetry env info -p)/bin/activate ||
+. $(poetry env info -p)/bin/activate ||
   { >&2 echo 'Failed to activate project virtualenv!' && exit 1; }
 
 udpipe_model=czech-pdt-ud-2.4-190531.udpipe
@@ -38,8 +38,8 @@ echo "# ---8<----------------------------------------->8---" >>"$rtd_reqs"
 # interested in missing references to stuff defined as part of corpy, and not
 # the warning emitted upon importing corpy when no IPython session is found
 sphinx-build -j auto -Ean docs docs/_build 2>&1 |
-  { grep -P "WARNING.*corpy" || [ $? == 1 ]; } |
-  { grep -Pv "IPython session not found" || [ $? == 1 ]; }
+  { grep -P "WARNING.*corpy" || [ $? = 1 ]; } |
+  { grep -Pv "IPython session not found" || [ $? = 1 ]; }
 # possibly also check external links every now and then
 # sphinx-build -b linkcheck docs docs/_build
 
