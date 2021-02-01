@@ -98,12 +98,11 @@ def clean_env(
     blacklist: Optional[Iterable[str]] = None,
     whitelist: Optional[Iterable[str]] = None,
     restore_builtins: bool = True,
-    # TODO: remove the keep_ prefixes and invert the booleans
-    keep_current_scope: bool = False,
-    keep_callables: bool = True,
-    keep_upper: bool = True,
-    keep_dunder: bool = True,
-    keep_sunder: bool = False,
+    strict: bool = True,
+    callables: bool = False,
+    upper: bool = False,
+    dunder: bool = False,
+    sunder: bool = True,
     env: Optional[dict] = None,
 ):
     """Run a block of code in a sanitized global environment.
@@ -150,19 +149,19 @@ def clean_env(
     :param restore_builtins: Make sure that the conventional names for built-in
         objects point to those objects (beginners often use ``list`` or
         ``sorted`` as variable names).
-    :param keep_current_scope: Allow global variables in the current scope, i.e.
-        only start pruning within function calls. NOTE: This is slower because
-        it requires tracing the function calls.
-    :param keep_callables: Keep variables which refer to callables.
-    :param keep_upper: Keep variables with all-uppercase identifiers
-        (underscores allowed), which are likely to be intentional global
-        variables (constants and the like).
-    :param keep_dunder: Keep variables whose name starts with a double
-        underscore.
-    :param keep_sunder: Keep variables whose name starts with a single
-        underscore.
+    :param strict: In non-strict mode, allow global variables in the current
+        scope, i.e. only start pruning within function calls. NOTE: This is
+        slower because it requires tracing the function calls. Also, when using
+        `clean_env` as a function decorator, non-strict probably doesn't make
+        sense.
+    :param callables: Prune variables which refer to callables.
+    :param upper: Prune variables with all-uppercase identifiers (underscores
+        allowed), which are likely to be intentional global variables (constants
+        and the like).
+    :param dunder: Prune variables whose name starts with a double underscore.
+    :param sunder: Prune variables whose name starts with a single underscore.
     :param env: The environment to clean up. You should never have to specify
-        this manually, unless you're doing something very clever.
+        this manually, unless you're doing something clever.
 
     """
     blacklist, whitelist = set(blacklist or ()), set(whitelist or ())
@@ -185,13 +184,13 @@ def clean_env(
                 remove = False
             elif restore_builtins and builtin is not None:
                 restore = True
-            elif keep_callables and callable(value):
+            elif not callables and callable(value):
                 remove = False
-            elif keep_upper and name.isupper():
+            elif not upper and name.isupper():
                 remove = False
-            elif keep_dunder and name.startswith("__"):
+            elif not dunder and name.startswith("__"):
                 remove = False
-            elif keep_sunder and name.startswith("_"):
+            elif not sunder and name.startswith("_"):
                 remove = False
             else:
                 pass
@@ -208,7 +207,14 @@ def clean_env(
         raise RuntimeError("Your Python has no stack frame support in the interpreter")
     user_frame, clean_env_gen = _get_user_frame_and_generator(current_frame)
 
-    if keep_current_scope:
+    if strict:
+        globals_to_prune = user_frame.f_globals if env is None else env
+        pruned_globals = do_clean_env(globals_to_prune)
+        try:
+            yield
+        finally:
+            globals_to_prune.update(pruned_globals)
+    else:
 
         def global_trace(frame, event, arg):
             # this means we've reached clean_env's matching __exit__ frame in
@@ -229,14 +235,6 @@ def clean_env(
 
         sys.settrace(global_trace)
         yield
-
-    else:
-        globals_to_prune = user_frame.f_globals if env is None else env
-        pruned_globals = do_clean_env(globals_to_prune)
-        try:
-            yield
-        finally:
-            globals_to_prune.update(pruned_globals)
 
 
 # vi: set foldmethod=marker:

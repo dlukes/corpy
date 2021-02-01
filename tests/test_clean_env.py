@@ -34,67 +34,67 @@ def test_reassigned_builtins_are_restored():
     assert not callable(sorted)
 
 
-def test_keep_current_scope_works():
+def test_strict():
     global foo
     foo = ()
 
     def return_foo():
         return foo
 
-    with clean_env(keep_current_scope=True):
+    with clean_env(strict=False):
         assert foo == ()
     with pytest.raises(NameError) as err:  # type: ignore
-        with clean_env(keep_current_scope=True):
+        with clean_env(strict=False):
             return_foo()
     assert "'foo'" in str(err)
 
 
-def test_keep_callables_works():
+def test_callables():
     foo = lambda x: x
     globals().update(foo=foo)
     with clean_env():
         assert globals().get("foo") is foo
-    with clean_env(keep_callables=False):
+    with clean_env(callables=True):
         assert globals().get("foo") is None
 
 
-def test_keep_upper_works():
+def test_upper():
     globals().update(FOO_BAR=1)
     with clean_env():
         assert globals().get("FOO_BAR") == 1
-    with clean_env(keep_upper=False):
+    with clean_env(upper=True):
         assert globals().get("FOO_BAR") is None
 
 
-def test_keep_dunder_works():
+def test_dunder():
     globals().update(__dunder=1)
     with clean_env():
         assert globals().get("__dunder") == 1
-    with clean_env(keep_dunder=False):
+    with clean_env(dunder=True):
         assert globals().get("__dunder") is None
 
 
-def test_keep_sunder_works():
+def test_sunder():
     globals().update(_sunder=1)
-    with clean_env(keep_sunder=True):
+    with clean_env(sunder=False):
         assert globals().get("_sunder") == 1
     with clean_env():
         assert globals().get("_sunder") is None
 
 
 def test_can_be_used_as_decorator():
-    global foo
-    foo = ()
-
-    def return_foo():
-        return foo
-
-    assert return_foo() is foo
+    global foo, FOO
+    foo = FOO = ()
 
     @clean_env()
     def return_foo():
         return foo
 
+    @clean_env()
+    def return_FOO():
+        return FOO
+
     with pytest.raises(NameError) as err:  # type: ignore
-        return_foo()
+        assert return_foo() is foo
     assert "'foo'" in str(err)
+    assert return_FOO() is FOO
