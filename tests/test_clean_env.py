@@ -34,6 +34,21 @@ def test_reassigned_builtins_are_restored():
     assert not callable(sorted)
 
 
+def test_keep_current_scope_works():
+    global foo
+    foo = ()
+
+    def return_foo():
+        return foo
+
+    with clean_env(keep_current_scope=True):
+        assert foo == ()
+    with pytest.raises(NameError) as err:  # type: ignore
+        with clean_env(keep_current_scope=True):
+            return_foo()
+    assert "'foo'" in str(err)
+
+
 def test_keep_callables_works():
     foo = lambda x: x
     globals().update(foo=foo)

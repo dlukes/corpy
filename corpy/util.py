@@ -1,11 +1,18 @@
 """Small utility functions.
 
 """
+import sys
 import inspect
 import builtins
 from pprint import pprint
 from contextlib import contextmanager
-from typing import Optional, Iterable
+
+from types import FrameType, GeneratorType
+from typing import Optional, Iterable, Tuple
+
+
+#
+# ------------------------------------------------------------------------- Head {{{1
 
 
 def _head_gen(items, first_n):
@@ -44,6 +51,10 @@ def head(collection, first_n=None):
     pprint(constructor(_head_gen(items, first_n)))
 
 
+#
+# -------------------------------------------------------------------------- Cmp {{{1
+
+
 def cmp(lhs, rhs, test="__eq__"):
     """Wrap assert statement to automatically raise an informative error."""
     msg = f"{head(lhs)} {test} {head(rhs)} is not True!"
@@ -58,12 +69,37 @@ def cmp(lhs, rhs, test="__eq__"):
     assert ans, msg
 
 
+#
+# -------------------------------------------------------------------- Clean env {{{1
+
+
+def _get_user_frame_and_generator(
+    start_frame: FrameType,
+) -> Tuple[FrameType, GeneratorType]:
+    ctxlib_fname = generator = None
+    # walk up the call stack, skipping frames in this file and in
+    # contextlib, to reach the user code that triggered `with clean_env(): ...`
+    # and whose globals we want to tamper with
+    for frame_info in inspect.getouterframes(start_frame):
+        if ctxlib_fname is None and frame_info.filename.endswith("contextlib.py"):
+            ctxlib_fname = frame_info.filename
+            generator = frame_info.frame.f_locals["self"].gen
+        elif ctxlib_fname is not None and frame_info.filename != ctxlib_fname:
+            break
+    else:
+        raise RuntimeError("User's frame not found in call stack")
+    assert isinstance(generator, GeneratorType)
+    return frame_info.frame, generator
+
+
 @contextmanager
 def clean_env(
     *,
     blacklist: Optional[Iterable[str]] = None,
     whitelist: Optional[Iterable[str]] = None,
     restore_builtins: bool = True,
+    # TODO: remove the keep_ prefixes and invert the booleans
+    keep_current_scope: bool = False,
     keep_callables: bool = True,
     keep_upper: bool = True,
     keep_dunder: bool = True,
@@ -114,6 +150,9 @@ def clean_env(
     :param restore_builtins: Make sure that the conventional names for built-in
         objects point to those objects (beginners often use ``list`` or
         ``sorted`` as variable names).
+    :param keep_current_scope: Allow global variables in the current scope, i.e.
+        only start pruning within function calls. NOTE: This is slower because
+        it requires tracing the function calls.
     :param keep_callables: Keep variables which refer to callables.
     :param keep_upper: Keep variables with all-uppercase identifiers
         (underscores allowed), which are likely to be intentional global
@@ -131,54 +170,73 @@ def clean_env(
     if bw_intersection:
         raise ValueError(f"Blacklist and whitelist overlap: {bw_intersection}")
 
-    if env is None:
-        parent_frames = inspect.getouterframes(inspect.currentframe())[1:]
-        for pf in parent_frames:
-            # there's at least one frame -- our direct parent -- that's in
-            # contextlib, maybe more; as soon as we reach a frame with a
-            # different filename, we've found the user code that called `with
-            # clean_env(): ...` and whose globals we want to tamper with
-            if pf.filename != parent_frames[0].filename:
-                break
-        else:
-            raise RuntimeError("Frame to clean not found in call stack")
-        globals_to_prune = pf.frame.f_globals
-    else:
-        globals_to_prune = env
-    pruned_globals = {}
+    def do_clean_env(globals_to_prune: dict) -> dict:
+        pruned_globals = {}
+        # NOTE: We'll be updating the globals dict as part of the loop, so we need
+        # to store the items in a list, otherwise our iterator would be invalidated
+        # by the update.
+        for name, value in list(globals_to_prune.items()):
+            remove, restore = True, False
+            builtin = getattr(builtins, name, None)
 
-    # NOTE: We'll be updating the globals dict as part of the loop, so we need
-    # to store the items in a list, otherwise our iterator would be invalidated
-    # by the update.
-    for name, value in list(globals_to_prune.items()):
-        remove, restore = True, False
-        builtin = getattr(builtins, name, None)
+            if name in blacklist:
+                pass
+            elif name in whitelist:
+                remove = False
+            elif restore_builtins and builtin is not None:
+                restore = True
+            elif keep_callables and callable(value):
+                remove = False
+            elif keep_upper and name.isupper():
+                remove = False
+            elif keep_dunder and name.startswith("__"):
+                remove = False
+            elif keep_sunder and name.startswith("_"):
+                remove = False
+            else:
+                pass
 
-        if name in blacklist:
-            pass
-        elif name in whitelist:
-            remove = False
-        elif restore_builtins and builtin is not None:
-            restore = True
-        elif keep_callables and callable(value):
-            remove = False
-        elif keep_upper and name.isupper():
-            remove = False
-        elif keep_dunder and name.startswith("__"):
-            remove = False
-        elif keep_sunder and name.startswith("_"):
-            remove = False
-        else:
-            pass
+            if remove:
+                pruned_globals[name] = globals_to_prune.pop(name)
+            if restore:
+                globals_to_prune[name] = builtin
 
-        if remove:
-            del globals_to_prune[name]
-            pruned_globals[name] = value
+        return pruned_globals
 
-        if restore:
-            globals_to_prune[name] = builtin
+    current_frame = inspect.currentframe()
+    if current_frame is None:
+        raise RuntimeError("Your Python has no stack frame support in the interpreter")
+    user_frame, clean_env_gen = _get_user_frame_and_generator(current_frame)
 
-    try:
+    if keep_current_scope:
+
+        def global_trace(frame, event, arg):
+            # this means we've reached clean_env's matching __exit__ frame in
+            # contextlib -> stop tracing
+            if getattr(frame.f_locals.get("self"), "gen", None) is clean_env_gen:
+                sys.settrace(None)
+                return
+
+            globals_to_prune = frame.f_globals
+            pruned_globals = do_clean_env(globals_to_prune)
+            frame.f_trace_lines = False
+
+            def local_trace(frame, event, arg):
+                if event == "return":
+                    globals_to_prune.update(pruned_globals)
+
+            return local_trace
+
+        sys.settrace(global_trace)
         yield
-    finally:
-        globals_to_prune.update(pruned_globals)
+
+    else:
+        globals_to_prune = user_frame.f_globals if env is None else env
+        pruned_globals = do_clean_env(globals_to_prune)
+        try:
+            yield
+        finally:
+            globals_to_prune.update(pruned_globals)
+
+
+# vi: set foldmethod=marker:
