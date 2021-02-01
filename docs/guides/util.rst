@@ -31,6 +31,7 @@ wrapper.)
     >>> numbers = [0, 3, 1, 2, 4]
     >>> sorted(numbers)
     [0, 1, 2, 3, 4]
+    >>> #                ↓ typo!
     >>> def sort_numbers(numbrs):
     ...     return sorted(numbers)
     ...
@@ -74,13 +75,64 @@ problem with our code:
     ...     sort_numbers([0, 2, 1])
     ...
     Traceback (most recent call last):
-      ...
+      File ..., line 2, in <module>
+        sort_numbers([0, 2, 1])
+      File ..., line 2, in sort_numbers
+        return sorted(numbers)
     NameError: name 'numbers' is not defined
 
+Which gives you a good hint what the problem might be, so you can now fix your
+function and try again:
+
+.. code:: python
+
+    >>> #                ↓ typo fixed
+    >>> def sort_numbers(numbers):
+    ...     return sorted(numbers)
+    ...
+    >>> with clean_env():
+    ...     sort_numbers([0, 2, 1])
+    ...
+    [0, 1, 2]
+
 By default, ``clean_env`` tries to be "smart" about which globals to remove and
-which to keep. If the defaults don't suit you though, you can tweak its behavior
-by using blacklists or whitelists and other options. Check out the documentation
-for :func:`corpy.util.clean_env` for further details.
+which to keep, e.g. it leaves functions alone, as you've probably noticed, since
+we were able to call ``sort_numbers`` within the ``with`` block. If the defaults
+don't suit you though, you can tweak its behavior by using blacklists or
+whitelists and other options. Check out the documentation for
+:func:`corpy.util.clean_env` for further details.
+
+One common case where you might want to change the defaults is to make
+``clean_env`` a little bit more lenient, so that it allows all global variables
+within the ``with`` block itself, and only starts pruning them inside function
+calls. Typically, you'll want to use previously defined (global) variables to
+test your functions under ``clean_env``, but by default, you can't, obviously,
+because ``clean_env`` hides them:
+
+.. code:: python
+
+    >>> with clean_env():
+    ...     sort_numbers(numbers)
+    ...
+    Traceback (most recent call last):
+      File ..., line 2, in <module>
+        sort_numbers(numbers)
+    NameError: name 'numbers' is not defined
+
+That's where the ``strict=False`` option comes in. In the code below, it allows
+referring to the ``numbers`` global variable as part of the ``with`` block, and
+only hides it during the function call.
+
+.. code:: python
+
+    >>> with clean_env(strict=False):
+    ...     sort_numbers(numbers)
+    ...
+    [0, 1, 2, 3, 4]
+
+While the non-strict approach is convenient, it requires a slightly different
+and more complicated strategy, which makes it somewhat slower. That's why it's
+opt-in, even though it's very often what you want.
 
 Breaking code by re-assigning built-in functions
 ------------------------------------------------
@@ -101,7 +153,8 @@ list, instead of the sorting function it points to by default.
 
     >>> sorted(numbers)
     Traceback (most recent call last):
-      ...
+      File ..., line 1, in <module>
+        sorted(numbers)
     TypeError: 'list' object is not callable
 
 If this happens in the students' own code, they might realize what they broke
