@@ -219,6 +219,7 @@ def clean_env(
     else:
 
         def global_trace(frame, event, arg):
+            print(frame)
             # this means we've reached clean_env's matching __exit__ frame in
             # contextlib -> stop tracing
             if getattr(frame.f_locals.get("self"), "gen", None) is clean_env_gen:
@@ -235,8 +236,14 @@ def clean_env(
 
             return local_trace
 
-        sys.settrace(global_trace)
-        yield
+        # when an explicit env is passed in, we're being called from the IPython
+        # magic, in which case let's leave setting up the tracing to the
+        # pre_execute IPython event
+        if env is None:
+            sys.settrace(global_trace)
+            yield
+        else:
+            yield global_trace
 
 
 # vi: set foldmethod=marker:

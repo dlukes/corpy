@@ -4,8 +4,10 @@ Utility functions for interactive use
 
 The :mod:`corpy.util` module is a collection of small utility functions I
 occasionally find useful, especially when teaching. They're mostly meant for use
-in an interactive session (JupyterLab / IPython). Here are some hints explaining
-when and why you might want them.
+in an interactive session (JupyterLab / IPython), some can even be used as
+`IPython magic commands <https://ipython.readthedocs.io/en/stable/interactive/magics.html>`__
+(remember to run ``%load_ext corpy`` first). Here are some hints explaining when
+and why you might want them.
 
 Running code in a sanitized global environment with :func:`corpy.util.clean_env`
 ================================================================================
