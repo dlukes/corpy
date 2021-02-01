@@ -99,6 +99,7 @@ def clean_env(
     whitelist: Optional[Iterable[str]] = None,
     restore_builtins: bool = True,
     strict: bool = True,
+    modules: bool = False,
     callables: bool = False,
     upper: bool = False,
     dunder: bool = False,
@@ -154,6 +155,7 @@ def clean_env(
         slower because it requires tracing the function calls. Also, when using
         `clean_env` as a function decorator, non-strict probably doesn't make
         sense.
+    :param modules: Prune variables which refer to modules.
     :param callables: Prune variables which refer to callables.
     :param upper: Prune variables with all-uppercase identifiers (underscores
         allowed), which are likely to be intentional global variables (constants
@@ -184,6 +186,8 @@ def clean_env(
                 remove = False
             elif restore_builtins and builtin is not None:
                 restore = True
+            elif not modules and inspect.ismodule(value):
+                remove = False
             elif not callables and callable(value):
                 remove = False
             elif not upper and name.isupper():
@@ -192,8 +196,6 @@ def clean_env(
                 remove = False
             elif not sunder and name.startswith("_"):
                 remove = False
-            else:
-                pass
 
             if remove:
                 pruned_globals[name] = globals_to_prune.pop(name)

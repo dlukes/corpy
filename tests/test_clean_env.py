@@ -49,6 +49,13 @@ def test_strict():
     assert "'foo'" in str(err)
 
 
+def test_modules():
+    with clean_env():
+        assert globals().get("pytest") is pytest
+    with clean_env(modules=True):
+        assert globals().get("pytest") is None
+
+
 def test_callables():
     foo = lambda x: x
     globals().update(foo=foo)
