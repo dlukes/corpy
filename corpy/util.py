@@ -68,6 +68,7 @@ def clean_env(
     keep_upper: bool = True,
     keep_dunder: bool = True,
     keep_sunder: bool = False,
+    env: Optional[dict] = None,
 ):
     """Run a block of code in a sanitized global environment.
 
@@ -85,6 +86,18 @@ def clean_env(
 
     >>> foo
     42
+
+    Also works as a decorator, which is like wrapping the entire function body
+    with the context manager:
+
+    >>> @clean_env()
+    ... def return_foo():
+    ...     return foo
+    ...
+    >>> return_foo()
+    Traceback (most recent call last):
+      ...
+    NameError: name 'foo' is not defined
 
     By default, `clean_env` tries to be clever and leave e.g. functions alone,
     as well as other objects which are likely to be "legitimate" globals. It
@@ -109,6 +122,8 @@ def clean_env(
         underscore.
     :param keep_sunder: Keep variables whose name starts with a single
         underscore.
+    :param env: The environment to clean up. You should never have to specify
+        this manually, unless you're doing something very clever.
 
     """
     blacklist, whitelist = set(blacklist or ()), set(whitelist or ())
@@ -116,10 +131,22 @@ def clean_env(
     if bw_intersection:
         raise ValueError(f"Blacklist and whitelist overlap: {bw_intersection}")
 
-    # this parent frame is in contextlib, the grandparent frame should be the
-    # code that called `with clean_env(): ...`
-    globals_to_prune = inspect.currentframe().f_back.f_back.f_globals
+    if env is None:
+        parent_frames = inspect.getouterframes(inspect.currentframe())[1:]
+        for pf in parent_frames:
+            # there's at least one frame -- our direct parent -- that's in
+            # contextlib, maybe more; as soon as we reach a frame with a
+            # different filename, we've found the user code that called `with
+            # clean_env(): ...` and whose globals we want to tamper with
+            if pf.filename != parent_frames[0].filename:
+                break
+        else:
+            raise RuntimeError("Frame to clean not found in call stack")
+        globals_to_prune = pf.frame.f_globals
+    else:
+        globals_to_prune = env
     pruned_globals = {}
+
     # NOTE: We'll be updating the globals dict as part of the loop, so we need
     # to store the items in a list, otherwise our iterator would be invalidated
     # by the update.

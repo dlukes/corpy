@@ -65,3 +65,21 @@ def test_keep_sunder_works():
         assert globals().get("_sunder") == 1
     with clean_env():
         assert globals().get("_sunder") is None
+
+
+def test_can_be_used_as_decorator():
+    global foo
+    foo = ()
+
+    def return_foo():
+        return foo
+
+    assert return_foo() is foo
+
+    @clean_env()
+    def return_foo():
+        return foo
+
+    with pytest.raises(NameError) as err:  # type: ignore
+        return_foo()
+    assert "'foo'" in str(err)
