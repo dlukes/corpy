@@ -1,22 +1,19 @@
-import sys
 import inspect
-from contextlib import contextmanager
+import textwrap
+from typing import Any, Optional, Dict
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
 
 from .util import clean_env
 
 
-# TODO: unit-test this, to ensure magic options are properly mapped to kwargs
-# (it's basically the only complicated logic here, everything else is in
-# util.py; other than this, just test whether the magic actually works in both
-# strict and non-strict modes)
-def _clean_env_opts2kwargs(opts):
+# TODO: unit-test this, to ensure magic options are properly mapped to kwargs?
+def _clean_env_opts2kwargs(opts: Dict[str, Any]) -> Dict[str, Any]:
     opt2kwarg = dict(
         b="blacklist",
         w="whitelist",
         r="restore_builtins",
-        a="strict",
+        x="strict",
         m="modules",
         c="callables",
         u="upper",
@@ -33,52 +30,84 @@ def _clean_env_opts2kwargs(opts):
     return kwargs
 
 
-@contextmanager
-def _tracing_managed_via_ipython_events(ip, global_trace):
-    # yield
-    settrace = lambda: sys.settrace(global_trace)
-    unsettrace = lambda: sys.settrace(None)
-    ip.events.register("pre_execute", settrace)
-    ip.events.register("post_execute", unsettrace)
-    yield
-    ip.events.unregister("pre_execute", settrace)
-    ip.events.unregister("post_execute", unsettrace)
-
-
 @magics_class
 class CorpyMagics(Magics):
     @line_cell_magic
-    def clean_env(self, line, cell=None):
-        """TODO
+    def clean_env(self, line: str, cell: Optional[str] = None) -> Any:
+        """Run a block of code in a sanitized global environment.
 
-        Take inspiration from
-        https://github.com/ipython/ipython/blob/6a7c488093026577db0d5c5f21d2aea129e5b6c9/IPython/core/magics/execution.py#L184
+        Usage, in line mode:
+          %clean_env [options] statement
 
-        Mnemonics for toggle options: lowercase letters toggle on, uppercase
-        toggle off. You can think of `-a` for `strict` as standing for "(prune)
-        all".
+        Usage, in cell mode:
+          %%clean_env [options] [statement]
+          code...
+          code...
+
+        In cell mode, the block to run is constructed by appending the
+        additional code lines to the (possibly empty) statement on the first
+        line.
+
+        The original global environment is restored afterwards.
+
+        Options:
+
+        For boolean options, lowercase letters toggle the option on, uppercase
+        letters toggle it off.
+
+        -b <varname>
+          Blacklist this variable, i.e. *always* remove it from the environment
+          prior to execution, irrespective of the other options. Repeat this
+          option with different arguments to blacklist multiple variables.
+
+        -w <varname>
+          Whitelist this variable, i.e. *never* remove it from the environment
+          prior to execution, irrespective of the other options. Repeat this
+          option with different arguments to whitelist multiple variables.
+
+        -x to toggle on, -X to toggle off (default: on)
+          Strict mode. In non-strict mode, allow global variables in the current
+          scope, i.e. only start pruning within function calls. NOTE: This is
+          slower because it requires tracing the function calls.
+
+        -r to toggle on, -R to toggle off (default: on)
+          Restore builtins, i.e. make sure that the conventional names for
+          built-in objects point to those objects (beginners often use ``list``
+          or ``sorted`` as variable names).
+
+        -m to toggle on, -M to toggle off (default: off)
+          Prune variables which refer to modules.
+
+        -c to toggle on, -C to toggle off (default: off)
+          Prune variables which refer to callables.
+
+        -u to toggle on, -U to toggle off (default: off)
+          Prune variables with all-uppercase identifiers (underscores allowed),
+          which are likely to be intentional global variables (constants and the
+          like).
+
+        -d to toggle on, -D to toggle off (default: off)
+          Prune variables whose name starts with a double underscore.
+
+        -s to toggle on, -S to toggle off (default: on)
+          Prune variables whose name starts with a single underscore.
+
+        See also:
+
+          from corpy.util import clean_env
+          clean_env?
 
         """
         opts, code = self.parse_options(
-            line, "b:w:rRaAmMcCuUdDsS", list_all=True, posix=False
+            line, "b:w:xXrRmMcCuUdDsS", list_all=True, posix=False
         )
         kwargs = _clean_env_opts2kwargs(opts)
-        kwargs["env"] = self.shell.user_ns
-        # the comment on the first line is there mostly to make line numbers
-        # match between the code the user wrote and the code that runs
-        code = f"{code}  # Running code in a sanitized environment...".strip()
-        if cell is not None:
+        kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
+        assert isinstance(code, str)
+        if code.strip() and cell is not None:
             code += "\n" + cell
-
-        # kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
-        # code = f"with clean_env({kwargs}):\n" + textwrap.indent(code, " ")
-        # self.shell.run_cell("from corpy.util import clean_env")
-
-        # TODO: the non-strict version is currently broken in IPython (it nukes
-        # global scopes it shouldn't) -> figure out why
-        with clean_env(**kwargs) as global_trace:
-            if global_trace is None:
-                return self.shell.run_cell(code).result
-            else:
-                with _tracing_managed_via_ipython_events(self.shell, global_trace):
-                    return self.shell.run_cell(code).result
+        elif cell is not None:
+            code = cell
+        code = f"with clean_env({kwargs}):\n" + textwrap.indent(code, " ")
+        self.shell.run_cell("from corpy.util import clean_env")
+        return self.shell.run_cell(code).result

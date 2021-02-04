@@ -13,8 +13,14 @@ def module_ip():
 @pytest.fixture(scope="function")
 def ip(module_ip):
     module_ip.run_line_magic("load_ext", "corpy")
+    module_ip.run_cell(
+        """
+foo = 1
+def bar():
+    print(foo)
+"""
+    )
     yield module_ip
-    # module_ip.run_line_magic("unload_ext", "corpy")
     module_ip.run_line_magic("reset", "-f")
 
 
@@ -122,44 +128,79 @@ def test_can_be_used_as_decorator():
     assert return_FOO() is FOO
 
 
-def test_magic(ip):
-    # We can't use pytest.raises here, in part because clean_env itself uses
-    # run_cell. It's that nested call that raises an error, which is then
-    # handled by the IPython shell, i.e. printed to stdout, at which point it's
-    # considered handled and it's not propagated further out into the outer
-    # run_cell call here in the test suite, so the result we get here looks as
-    # if there was no error.
-    #
-    # I could in theory call raise_error on the run_cell result in clean_env,
-    # but I would either have to detect running in a test scenario and only do
-    # it then, or I'd have to accept that this additional traceback pointing
-    # into the guts of corpy is shown to users every time clean_env does its job
-    # and catches access to a global, which is unacceptable. And I could *still*
-    # not just use pytest.raises, I'd have to manually call raise_error here in
-    # the test case as well, or test against the error_in_exec attribute of the
-    # result.
-    #
-    # So instead, we use capture_output to get a hold of the error message
-    # printed by IPython and run asserts against that, which is much less messy.
-    #
-    # For possible future reference: there's also a way to intercept exceptions
-    # by setting a custom handler:
-    #
-    #   ip.set_custom_exc((Exception,), lambda *a, **kw: None)
-    #
-    ip.run_cell("foo = 1")
+# We can't use pytest.raises in the IPython magic tests, in part because
+# clean_env itself uses run_cell. It's that nested call that raises an error,
+# which is then handled by the IPython shell, i.e. printed to stdout, at which
+# point it's considered handled and it's not propagated further out into the
+# outer run_cell call here in the test suite, so the result we get here looks as
+# if there was no error.
+#
+# I could in theory call raise_error on the run_cell result in clean_env, but I
+# would either have to detect running in a test scenario and only do it then, or
+# I'd have to accept that this additional traceback pointing into the guts of
+# corpy is shown to users every time clean_env does its job and catches access
+# to a global, which is unacceptable. And I could *still* not just use
+# pytest.raises, I'd have to manually call raise_error here in the test case as
+# well, or test against the error_in_exec attribute of the result.
+#
+# So instead, we use capture_output to get a hold of the error message printed
+# by IPython and run asserts against that, which is much less messy.
+#
+# For possible future reference: there's also a way to intercept exceptions by
+# setting a custom handler:
+#
+#   ip.set_custom_exc((Exception,), lambda *a, **kw: None)
+#
+# We test both strict and non-strict modes, both in cell and line magic mode,
+# because the code paths are different and the execution machinery tricky enough
+# that it's worth it to basically duplicate tests for the same kind of
+# functionality as above, to make sure that the IPython execution context
+# doesn't break them.
 
+
+def test_cell_magic_strict(ip):
     with capture_output() as captured:
         ip.run_cell("%%clean_env\nprint(foo)")
     assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
     assert not captured.stderr
 
     with capture_output() as captured:
+        ip.run_cell("%%clean_env\nbar()")
+    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert not captured.stderr
+
+
+def test_cell_magic_non_strict(ip):
+    with capture_output() as captured:
+        ip.run_cell("%%clean_env -X\nprint(foo)")
+    assert captured.stdout == "1\n"
+    assert not captured.stderr
+
+    with capture_output() as captured:
+        ip.run_cell("%%clean_env -X\nbar()")
+    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert not captured.stderr
+
+
+def test_line_magic_strict(ip):
+    with capture_output() as captured:
         ip.run_cell("%clean_env print(foo)")
     assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
     assert not captured.stderr
 
     with capture_output() as captured:
-        ip.run_cell("%%clean_env -A\nprint(foo)")
+        ip.run_cell("%clean_env bar()")
+    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert not captured.stderr
+
+
+def test_line_magic_non_strict(ip):
+    with capture_output() as captured:
+        ip.run_cell("%clean_env -X print(foo)")
     assert captured.stdout == "1\n"
+    assert not captured.stderr
+
+    with capture_output() as captured:
+        ip.run_cell("%clean_env -X bar()")
+    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
     assert not captured.stderr

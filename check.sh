@@ -30,7 +30,7 @@ pytest -n auto
 rtd_reqs=docs/requirements.txt
 echo "# ---8<--- MANAGED BY check.sh; DO NOT EDIT! --->8---" >"$rtd_reqs"
 poetry export --dev --without-hashes |
-  grep -P '^(sphinx|furo)==' >>"$rtd_reqs"
+  grep -P '^(sphinx|furo|ipython)==' >>"$rtd_reqs"
 echo "# ---8<----------------------------------------->8---" >>"$rtd_reqs"
 
 >&2 echo "Building docs; if it hangs, re-run without '-j auto' and redirection to get helpful error output."

@@ -12,12 +12,40 @@ and why you might want them.
 Running code in a sanitized global environment with :func:`corpy.util.clean_env`
 ================================================================================
 
-When working in a Jupyter notebook, you often end up creating a lot of global
-variables while experimenting. Some of them might even end up disappearing from
-the written record, as you edit and delete cells. This (partially) invisible
-global state accumulates and can lead to hard to debug problems, where typos
-pass silently, code mysteriously fails because builtin functions have been
-overwritten, etc.
+Most of the time, this will probably be useful from inside an IPython session
+(either in the terminal or in JupyterLab or a similar web notebook interface) to
+isolate pieces of code from the big hairy blob of global state you may have
+inadvertently accumulated over the course of your interactive coding. Which
+means you'll want to load the ``corpy`` extension and use the cell/line magic
+command it provides:
+
+.. ipython::
+
+   In [1]: %load_ext corpy
+
+   In [2]: foo = 1
+
+   In [3]: print(foo)
+
+.. ipython::
+   :okexcept:
+
+   In [4]: %%clean_env
+      ...: print(foo)
+
+.. ipython::
+   :okexcept:
+
+   In [5]: %clean_env print(foo)
+
+See ``%clean_env?`` for details on how to use the magic.
+
+Why is this useful? When working interactively, you often end up creating a lot
+of global variables while experimenting. Some of them might even end up
+disappearing from the written record, as you edit and delete cells. This
+(partially) invisible global state accumulates and can lead to hard to debug
+problems, where typos pass silently, code mysteriously fails because builtin
+functions have been overwritten, etc. See examples below.
 
 Global variables can hide typos
 -------------------------------

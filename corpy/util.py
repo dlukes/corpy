@@ -97,14 +97,13 @@ def clean_env(
     *,
     blacklist: Optional[Iterable[str]] = None,
     whitelist: Optional[Iterable[str]] = None,
-    restore_builtins: bool = True,
     strict: bool = True,
+    restore_builtins: bool = True,
     modules: bool = False,
     callables: bool = False,
     upper: bool = False,
     dunder: bool = False,
     sunder: bool = True,
-    env: Optional[dict] = None,
 ):
     """Run a block of code in a sanitized global environment.
 
@@ -147,14 +146,14 @@ def clean_env(
         irrespective of the other options.
     :param whitelist: A list of global variable names to always keep,
         irrespective of the other options.
-    :param restore_builtins: Make sure that the conventional names for built-in
-        objects point to those objects (beginners often use ``list`` or
-        ``sorted`` as variable names).
     :param strict: In non-strict mode, allow global variables in the current
         scope, i.e. only start pruning within function calls. NOTE: This is
         slower because it requires tracing the function calls. Also, when using
         `clean_env` as a function decorator, non-strict probably doesn't make
         sense.
+    :param restore_builtins: Make sure that the conventional names for built-in
+        objects point to those objects (beginners often use ``list`` or
+        ``sorted`` as variable names).
     :param modules: Prune variables which refer to modules.
     :param callables: Prune variables which refer to callables.
     :param upper: Prune variables with all-uppercase identifiers (underscores
@@ -162,8 +161,6 @@ def clean_env(
         and the like).
     :param dunder: Prune variables whose name starts with a double underscore.
     :param sunder: Prune variables whose name starts with a single underscore.
-    :param env: The environment to clean up. You should never have to specify
-        this manually, unless you're doing something clever.
 
     """
     blacklist, whitelist = set(blacklist or ()), set(whitelist or ())
@@ -210,7 +207,7 @@ def clean_env(
     user_frame, clean_env_gen = _get_user_frame_and_generator(current_frame)
 
     if strict:
-        globals_to_prune = user_frame.f_globals if env is None else env
+        globals_to_prune = user_frame.f_globals
         pruned_globals = do_clean_env(globals_to_prune)
         try:
             yield
@@ -219,7 +216,6 @@ def clean_env(
     else:
 
         def global_trace(frame, event, arg):
-            print(frame)
             # this means we've reached clean_env's matching __exit__ frame in
             # contextlib -> stop tracing
             if getattr(frame.f_locals.get("self"), "gen", None) is clean_env_gen:
@@ -236,14 +232,8 @@ def clean_env(
 
             return local_trace
 
-        # when an explicit env is passed in, we're being called from the IPython
-        # magic, in which case let's leave setting up the tracing to the
-        # pre_execute IPython event
-        if env is None:
-            sys.settrace(global_trace)
-            yield
-        else:
-            yield global_trace
+        sys.settrace(global_trace)
+        yield
 
 
 # vi: set foldmethod=marker:
