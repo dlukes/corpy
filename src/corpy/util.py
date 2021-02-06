@@ -206,6 +206,12 @@ def clean_env(
         raise RuntimeError("Your Python has no stack frame support in the interpreter")
     user_frame, clean_env_gen = _get_user_frame_and_generator(current_frame)
 
+    # TODO: Maybe try an alternative approach: replace user_frame.f_globals with
+    # a dict subclass with a customized getter which will check the position of
+    # the current frame in the call stack before allowing access? This could
+    # result in both strict and non-strict mode using the same code, which would
+    # be good.
+
     if strict:
         globals_to_prune = user_frame.f_globals
         pruned_globals = do_clean_env(globals_to_prune)
