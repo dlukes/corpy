@@ -10,7 +10,10 @@ repository = "https://github.com/dlukes/corpy"
 readme = "README.rst"
 keywords = ["corpus", "linguistics", "NLP"]
 
-include = ["corpy/phonetics/*.tsv"]
+packages = [
+  { include = "corpy", from = "src" },
+]
+include = ["src/corpy/phonetics/*.tsv"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
