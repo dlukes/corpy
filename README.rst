@@ -69,13 +69,13 @@ Here's an idea of what you can do with CorPy:
 
    **Should I pick UDPipe or MorphoDiTa?**
 
-   UDPipe_ is the successor to MorphoDiTa_, extending and improving upon the
-   original codebase. It has more features at the cost of being somewhat more
-   complex: it does both `morphological tagging (including lemmatization) and
-   syntactic parsing <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__,
-   and it handles a number of different input and output formats. You can also
-   download `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for
-   many different languages.
+   Both are developed at `ÚFAL MFF UK`_. UDPipe_ has more features at the cost
+   of being somewhat more complex: it does both `morphological tagging
+   (including lemmatization) and syntactic parsing
+   <https://corpy.rtfd.io/en/stable/guides/udpipe.html>`__, and it handles a
+   number of different input and output formats. You can also download
+   `pre-trained models <http://ufal.mff.cuni.cz/udpipe/models>`__ for many
+   different languages.
 
    By contrast, MorphoDiTa_ only has `pre-trained models for Czech and English
    <http://ufal.mff.cuni.cz/morphodita/users-manual>`__, and only performs
@@ -91,8 +91,9 @@ Here's an idea of what you can do with CorPy:
    MorphoDiTa can also help you if you just want to tokenize text and don't have
    a language model available.
 
-.. _UDPipe: http://ufal.mff.cuni.cz/udpipe
-.. _MorphoDiTa: http://ufal.mff.cuni.cz/morphodita
+.. _`ÚFAL MFF UK`: https://ufal.mff.cuni.cz/
+.. _UDPipe: https://ufal.mff.cuni.cz/udpipe
+.. _MorphoDiTa: https://ufal.mff.cuni.cz/morphodita
 .. _UniversalDependencies: https://universaldependencies.org
 .. _CoNLL-U: https://universaldependencies.org/format.html
 
