@@ -10,8 +10,6 @@ repository = "https://github.com/dlukes/corpy"
 readme = "README.rst"
 keywords = ["corpus", "linguistics", "NLP"]
 
-include = ["src/corpy/phonetics/*.tsv"]
-
 [tool.poetry.dependencies]
 python = "^3.7"
 # regex is versioned using calver plus it sticks to the API of stdlib's re
