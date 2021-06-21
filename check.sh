@@ -1,6 +1,15 @@
 #!/bin/sh
 
 cd "$(dirname "$(realpath "$0")")"
+# Make sure package and dependencies are up-to-date inside the project
+# virtualenv. This is needed for steps that run on the installed package, not
+# the source tree:
+#
+# - testing (tests should pass with the latest compatible dependencies)
+# - exporting ReadTheDocs requirements
+# - building the docs
+poetry install
+poetry update
 . $(poetry env info -p)/bin/activate ||
   { >&2 echo 'Failed to activate project virtualenv!' && exit 1; }
 
