@@ -19,14 +19,18 @@
 
 # -- Project information -----------------------------------------------------
 
-import corpy
+import importlib.metadata
+from pathlib import Path
+from datetime import datetime
 
-project = "corpy"
-copyright = "2019, David Lukeš"
-author = "David Lukeš"
+project = next((Path(__file__).parent.parent / "src").iterdir()).name
+meta = importlib.metadata.metadata(project)
+author = meta["author"]
+now = datetime.now()
+copyright = f"2016--{now.year}, ÚČNK/{author}"
 
 # The full version, including alpha/beta/rc tags
-release = corpy.__version__
+release = meta["version"]
 
 
 # -- General configuration ---------------------------------------------------
