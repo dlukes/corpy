@@ -1,5 +1,5 @@
 # ---8<--- MANAGED BY check.sh; DO NOT EDIT! --->8---
-furo==2021.4.11b34; python_version >= "3.6"
-ipython==7.23.0; python_version >= "3.7"
+furo==2021.6.18b36; python_version >= "3.6"
+ipython==7.26.0; python_version >= "3.7"
 sphinx==3.5.4; python_version >= "3.5"
 # ---8<----------------------------------------->8---
