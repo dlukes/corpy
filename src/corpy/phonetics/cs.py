@@ -128,7 +128,12 @@ SUBSTR2PHONES = _load_substr2phones(
     ),  # pylint: disable=E1101
     PHONES,
 )
-DEVOICED2VOICED, VOICED2DEVOICED, TRIGGER_VOICING, TRIGGER_DEVOICING = _load_voicing_pairs(
+(
+    DEVOICED2VOICED,
+    VOICED2DEVOICED,
+    TRIGGER_VOICING,
+    TRIGGER_DEVOICING,
+) = _load_voicing_pairs(
     DIR.with_name("voicing_pairs.tsv").read_text(
         encoding="utf-8"
     ),  # pylint: disable=E1101
