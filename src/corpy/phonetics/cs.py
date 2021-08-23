@@ -338,7 +338,7 @@ def transcribe(
     *,
     alphabet="sampa",
     hiatus=False,
-    prosodic_boundary_symbols=set(),
+    prosodic_boundary_symbols: Optional[Set[str]] = None,
 ) -> List[Union[str, Tuple[str, ...]]]:
     """Phonetically transcribe `phrase`.
 
@@ -384,6 +384,8 @@ def transcribe(
         raise TypeError(
             f"Expected str or Iterable[str] as phrase argument, got {type(phrase)} instead"
         ) from err
+    if prosodic_boundary_symbols is None:
+        prosodic_boundary_symbols = set()
     matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
     transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
     return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore
