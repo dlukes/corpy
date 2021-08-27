@@ -7,7 +7,9 @@ import builtins
 from contextlib import contextmanager
 
 from types import FrameType, GeneratorType
-from typing import Optional, Iterable, Tuple
+from typing import Optional, Iterable, Tuple, NamedTuple
+
+import numpy as np
 
 
 #
@@ -181,6 +183,55 @@ def clean_env(
 
         sys.settrace(global_trace)
         yield
+
+
+#
+# ----------------------------------------------------- Longest common substring {{{1
+
+
+class LongestCommonSubstring(NamedTuple):
+    """Describes longest common substring between two strings.
+
+    Returned by :func:`longest_common_substring`.
+
+    """
+
+    start1: int
+    start2: int
+    length: int
+
+
+LongestCommonSubstring.start1.__doc__ += "; substring start index in first string"  # type: ignore
+LongestCommonSubstring.start2.__doc__ += "; substring start index in second string"  # type: ignore
+LongestCommonSubstring.length.__doc__ += "; substring length"  # type: ignore
+
+
+def longest_common_substring(str1: str, str2: str) -> Optional[LongestCommonSubstring]:
+    """Find longest common substring between `str1` and `str2`, if it exists.
+
+    .. note::
+
+       Uses an efficient dynamic programming algorithm which runs in
+       :math:`O(len(str1) \\times len(str2))` time. Still, it computes the full
+       table describing *all* substrings, which I'm sure could be avoided. For
+       instance, we could keep track of the longest streak and zero down on it /
+       exit early as soon as there's too little of the strings remaining to
+       yield any competitors. But since this function is meant to be used on
+       words as input, which tend to be fairly short, the added overhead is
+       probably not worth it, not to mention the potential headaches caused by
+       a more complicated implementation.
+
+    """
+    table = np.zeros((len(str1), len(str2)), dtype=int)
+    for i, c1 in enumerate(str1):
+        for j, c2 in enumerate(str2):
+            if c1 == c2:
+                streak = 0 if not (i and j) else table[i - 1, j - 1]
+                table[i, j] = 1 + streak
+    i, j = np.unravel_index(table.argmax(), table.shape)
+    length = table[i, j]
+    if length > 0:
+        return LongestCommonSubstring(i - length + 1, j - length + 1, length)
 
 
 # vi: set foldmethod=marker:
