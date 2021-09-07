@@ -24,18 +24,20 @@ numpy = "^1.16"
 click = "^7.0"
 
 [tool.poetry.dev-dependencies]
-ipython = "^7.20.0"
-ipdb = "^0.13.4"
-pytest = "^4.5"
-pytest-xdist = "^1.28"
+ipython = "*"
+ipdb = "*"
+pytest = "*"
 sphinx = "^3.4.3"
-furo = "*"
-twine = "^1.13"
-jedi = "0.17.2"
+furo = {version = "*", allow-prereleases = true}
+twine = "*"
 
 [tool.poetry.scripts]
 xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
+
+[tool.pytest.ini_options]
+addopts = '--quiet --doctest-modules --doctest-glob="*.rst"'
+filterwarnings = ['ignore:::^corpy\.?']
 
 [build-system]
 requires = ["poetry>=1"]

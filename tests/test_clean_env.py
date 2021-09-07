@@ -41,10 +41,10 @@ def test_whitelist_works():
 
 
 def test_blacklist_cannot_overlap_with_whitelist():
-    with pytest.raises(ValueError) as err:  # type: ignore
+    with pytest.raises(ValueError) as exc_info:
         with clean_env(blacklist=["foo", "bar"], whitelist=["bar", "baz"]):
             pass
-    assert str(err).endswith("{'bar'}")
+    assert exc_info.match(r"\{'bar'\}$")
 
 
 def test_reassigned_builtins_are_restored():
@@ -64,10 +64,10 @@ def test_strict():
 
     with clean_env(strict=False):
         assert foo == ()
-    with pytest.raises(NameError) as err:  # type: ignore
+    with pytest.raises(NameError) as exc_info:
         with clean_env(strict=False):
             return_foo()
-    assert "'foo'" in str(err)
+    assert "'foo'" in exc_info.exconly()
 
 
 def test_modules():
@@ -122,9 +122,9 @@ def test_can_be_used_as_decorator():
     def return_FOO():
         return FOO
 
-    with pytest.raises(NameError) as err:  # type: ignore
+    with pytest.raises(NameError) as exc_info:
         assert return_foo() is foo
-    assert "'foo'" in str(err)
+    assert "'foo'" in exc_info.exconly()
     assert return_FOO() is FOO
 
 

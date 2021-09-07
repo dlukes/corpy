@@ -250,7 +250,7 @@ class TestUserAddedHyphen:
     def test_hyphen_at_end_of_word_is_not_allowed(self):
         with pytest.raises(ValueError) as exc_info:
             cs.transcribe("máš- hlad")
-        assert "máš-" in str(exc_info.value)
+        assert "máš-" in exc_info.exconly()
 
     def test_some_ways_to_have_a_literal_hyphen(self):
         assert cs.transcribe("- --- ?hlad- hl?-ad etc.") == [

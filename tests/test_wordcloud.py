@@ -11,7 +11,7 @@ def test_size_in_pixels():
     assert vis.size_in_pixels(4, 10, unit="cm", ppi=96) == (975, 2438)
     with pytest.raises(ValueError) as exc_info:
         vis.size_in_pixels(5, 5, unit="foo")
-    assert str(exc_info.value) == "`unit` must be one of ('in', 'cm')."
+    assert exc_info.match(r"`unit` must be one of \('in', 'cm'\)\.")
 
 
 def test_optimize_dimensions():

@@ -31,7 +31,7 @@ if [ ! -f "$morphodita_tagger" ]; then
   rm -rf "$morphodita" "$morphodita_zip"
 fi
 
-pytest -n auto
+pytest
 
 # update ReadTheDocs requirements
 rtd_reqs=docs/requirements.txt
