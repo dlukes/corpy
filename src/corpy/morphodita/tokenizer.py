@@ -3,8 +3,6 @@
 """
 import ufal.morphodita as ufal
 
-from . import LOG
-
 
 class Tokenizer:
     """A wrapper API around the tokenizers offered by MorphoDiTa.
@@ -30,16 +28,13 @@ class Tokenizer:
 
     def __init__(self, tokenizer_type):
         constructor_name = "new" + tokenizer_type.capitalize() + "Tokenizer"
-        self.tokenizer_constructor = getattr(ufal.Tokenizer, constructor_name)
+        self.tokenizer_constructor = getattr(ufal.Tokenizer, constructor_name)  # type: ignore
 
     @staticmethod
     def from_tagger(tagger_path):
-        """Load tokenizer associated with tagger file.
-
-        """
+        """Load tokenizer associated with tagger file."""
         self = Tokenizer("generic")
-        LOG.info("Loading tagger.")
-        tagger = ufal.Tagger.load(str(tagger_path))
+        tagger = ufal.Tagger.load(str(tagger_path))  # type: ignore
         self.tokenizer_constructor = tagger.newTokenizer
         if self.tokenizer_constructor() is None:
             raise RuntimeError(f"The tagger {tagger_path} has no associated tokenizer.")
@@ -84,8 +79,8 @@ class Tokenizer:
             raise TypeError(
                 "``text`` should be a str, you passed in {}.".format(type(text))
             )
-        forms = ufal.Forms()
-        token_ranges = ufal.TokenRanges()
+        forms = ufal.Forms()  # type: ignore
+        token_ranges = ufal.TokenRanges()  # type: ignore
         tokenizer = self.tokenizer_constructor()
         tokenizer.setText(text)
         while tokenizer.nextSentence(forms, token_ranges):

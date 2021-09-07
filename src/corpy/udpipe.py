@@ -1,13 +1,9 @@
 """Tokenizing, tagging and parsing text with UDPipe.
 
 """
-import logging
+import warnings
 
 from ufal import udpipe
-
-logging.basicConfig(level=logging.INFO)
-LOG = logging.getLogger(__name__)
-LOG.setLevel(logging.INFO)
 
 WORD_ATTRS = (
     "id",
@@ -50,7 +46,6 @@ class Model:
     """
 
     def __init__(self, model_path):
-        LOG.info("Loading model.")
         self._model = udpipe.Model.load(str(model_path))
         if self._model is None:
             raise RuntimeError(f"Unable to load model from {model_path!r}!")
@@ -282,7 +277,7 @@ def pprint(obj):
 
         pretty.pprint(obj)
     except ImportError:
-        LOG.warning("Please install the IPython package for pretty-printing to work.")
+        warnings.warn("Please install the IPython package for pretty-printing to work.")
 
 
 def pprint_config(*, digest=True):
@@ -318,12 +313,12 @@ try:
         _plain_formatter = _ipython.display_formatter.formatters["text/plain"]
         _register_pprinters(_plain_formatter)
     else:
-        LOG.warning(
+        warnings.warn(
             "IPython session not found! Processed text will not be automatically pretty-printed, "
             "but you may still do so explicitly with the corpy.udpipe.pprint function."
         )
 except ImportError:
-    LOG.warning(
+    warnings.warn(
         "IPython package not found! Processed text will not be automatically pretty-printed, and "
         "the corpy.udpipe.pprint function will not work."
     )

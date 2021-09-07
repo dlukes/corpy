@@ -1,15 +1,14 @@
 """An interface to MorphoDiTa taggers.
 
 """
-from typing import Union, Iterator, List, NamedTuple
-from collections.abc import Iterable
+import warnings
 from lazy import lazy
 from functools import lru_cache
 from pathlib import Path
+from collections.abc import Iterable
+from typing import Union, Iterator, List, NamedTuple
 
 import ufal.morphodita as ufal
-
-from . import LOG
 
 
 class Token(NamedTuple):
@@ -37,14 +36,13 @@ class Tagger:
 
     def __init__(self, tagger_path: Union[Path, str]):
         self._tagger_path = tagger_path
-        LOG.info("Loading tagger.")
         self._tagger = ufal.Tagger.load(str(tagger_path))  # type: ignore
         if self._tagger is None:
             raise RuntimeError(f"Unable to load tagger from {tagger_path!r}!")
         self._morpho = self._tagger.getMorpho()
         self._has_tokenizer = self._tagger.newTokenizer() is not None
         if not self._has_tokenizer:
-            LOG.warning(self._NO_TOKENIZER.format(tagger_path))
+            warnings.warn(self._NO_TOKENIZER.format(tagger_path))
 
     @lazy
     def _pdt_to_conll2009_converter(self):
