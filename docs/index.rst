@@ -20,6 +20,8 @@
 
    api/udpipe.rst
    api/morphodita.rst
+   api/morphodita/tokenizer.rst
+   api/morphodita/tagger.rst
    api/vis.rst
    api/phonetics_cs.rst
    api/vertical.rst
