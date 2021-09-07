@@ -260,3 +260,43 @@ class TestUserAddedHyphen:
             "hl?-ad",
             "etc.",
         ]
+
+
+class TestSmartHandlingOfVowelAcrossMorphemeBoundary:
+    @pytest.mark.parametrize(
+        "orth,phon",
+        [
+            # adjacent vowels incorrectly merged into diphthong
+            ("neurazit", [("n", "E_u", "r", "a", "z", "I", "t")]),
+            ("praubohý", [("p", "r", "a_u", "b", "o", "h\\", "i:")]),
+        ],
+    )
+    def test_no_tagger(self, orth, phon):
+        assert cs.transcribe(orth) == phon
+
+    @pytest.mark.parametrize(
+        "orth,phon",
+        [
+            # adjacent vowels correctly split into monophthongs
+            ("neurazit", [("n", "E", "u", "r", "a", "z", "I", "t")]),
+            ("neurozený", [("n", "E", "u", "r", "o", "z", "E", "n", "i:")]),
+            ("praubohý", [("p", "r", "a", "u", "b", "o", "h\\", "i:")]),
+            # adjacent vowels correctly merged into diphthong
+            ("neuron", [("n", "E_u", "r", "o", "n")]),
+        ],
+    )
+    def test_with_tagger(self, orth, phon):
+        assert cs.transcribe(orth, tagger=TAGGER) == phon
+
+    # TODO: Enable these when a new MorphoDiTa model is released, with a DeriNet
+    # which has useful derivations for them.
+    # assert cs.transcribe("poukázat") == [("p", "o_u", "k", "a:", "z", "a", "t")]
+    # assert cs.transcribe("poukázat", tagger=tagger) == [
+    #     ("p", "o", "u", "k", "a:", "z", "a", "t")
+    # ]
+    # assert cs.transcribe("vyextrahovat", hiatus=True) == [
+    #     ("v", "I", "j", "E", "k", "s", "t", "r", "a", "h\\", "o", "v", "a", "t")
+    # ]
+    # assert cs.transcribe("vyextrahovat", tagger=tagger, hiatus=True) == [
+    #     ("v", "I", "E", "k", "s", "t", "r", "a", "h\\", "o", "v", "a", "t")
+    # ]

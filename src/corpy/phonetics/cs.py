@@ -5,6 +5,8 @@ orthography-to-phonetics mapping are overridden using a pronunciation
 lexicon.
 
 """
+import logging
+import warnings
 import unicodedata as ud
 from functools import lru_cache
 from operator import itemgetter
@@ -22,6 +24,12 @@ from typing import (
 )
 
 import regex as re
+
+from corpy.util import longest_common_substring
+from corpy.morphodita import Token, Tagger
+from ufal.morphodita import DerivationFormatter  # type: ignore
+
+LOG = logging.getLogger(__name__)
 
 
 #
@@ -199,17 +207,72 @@ class ProsodicUnit:
         self._phonetic: Optional[List[Phone]] = None
 
     def phonetic(
-        self, *, alphabet: str = "SAMPA", hiatus=False
+        self,
+        *,
+        alphabet: str = "SAMPA",
+        hiatus=False,
+        tagger: Optional[Tagger] = None,
     ) -> List[Tuple[str, ...]]:
         """Phonetic transcription of ProsodicUnit."""
         if self._phonetic is None:
-            trans = self._str2phones(self.orthographic)
+            LOG.debug("Orthographic: %r", self.orthographic)
+            trans = self._smart_vowel_seqs(self.orthographic, tagger)
+            LOG.debug("Trans after _smart_vowel_seqs: %r", trans)
+            trans = self._str2phones(trans)
+            LOG.debug("Trans after _str2phones: %r", trans)
             # CSPs are implemented in one reverse pass (assimilation of voicing
             # can propagate) and one forward pass
             trans = self._voicing_assim(trans)
+            LOG.debug("Trans after _voicing_assim: %r", trans)
             trans = self._other_csps(trans, hiatus=hiatus)
+            LOG.debug("Trans after _other_csps: %r", trans)
             self._phonetic = trans
         return self._split_words_and_translate(self._phonetic, alphabet)
+
+    @staticmethod
+    def _smart_vowel_seqs(input_: List[str], tagger: Optional[Tagger]) -> List[str]:
+        if tagger is None:
+            return input_
+        deriv = DerivationFormatter.newPathDerivationFormatter(
+            tagger._tagger.getMorpho().getDerivator()
+        )
+        if deriv.formatDerivation("poukázat").split()[0] == "poukázat":
+            warnings.warn(
+                "You seem to be using a MorphoDiTa model based on an older version "
+                "of DeriNet. Many prefixes won't be detected. Upgrade to a newer "
+                "model if possible."
+            )
+
+        output = []
+        for token in cast(
+            Iterator[Token], tagger.tag([input_], convert="strip_lemma_id")
+        ):
+            word = token.word
+            lower = word.lower()
+            for lemma in deriv.formatDerivation(token.lemma).split():
+                lcs = longest_common_substring(lower, lemma.lower())
+                LOG.debug("word: %r, lemma: %r, lcs: %r", word, lemma, lcs)
+                if (
+                    lcs
+                    # we only care about lemmas in the derivation path that
+                    # allow us to identify prefixes, i.e. where the common
+                    # substring *does not* start at the beginning of the word
+                    # form...
+                    and (i := lcs.start1) > 0
+                    # but it *must* start at the beginning of the lemma
+                    # (otherwise word form doutník derived from lemma dutý will
+                    # be "morpheme"-split as do-utník because of LCS -ut-, which
+                    # is rubbish)
+                    and lcs.start2 == 0
+                    # currently, we're only aiming to prevent *u diphthongs and
+                    # hiatus insertion across morpheme boundaries; in the
+                    # future, if we add an option to insert glottal stops, this
+                    # will have to be reworked
+                    and (lower[i] == "u" or lower[i - 1] in "iíyý")
+                ):
+                    word = word[:i] + "-" + word[i:]
+            output.append(word)
+        return output
 
     @staticmethod
     def _str2phones(input_: List[str]) -> List[Phone]:
@@ -354,9 +417,27 @@ def transcribe(
     *,
     alphabet="sampa",
     hiatus=False,
+    tagger: Optional[Tagger] = None,
+    # TODO: toggle for glottal stop at boundaries inserted by tagger? in that
+    # case, the glottal stop should also trigger devoicing, e.g. podobojí vs.
+    # pot?obojí
     prosodic_boundary_symbols: Optional[Set[str]] = None,
 ) -> List[Union[str, Tuple[str, ...]]]:
     """Phonetically transcribe `phrase`.
+
+    .. note::
+
+       It is **highly recommended** to provide an instance of
+       :class:`corpy.morphodita.Tagger` via the `tagger` argument. This enables
+       smarter treatment of vowel sequences emerging as a result of prefixing.
+       Without a tagger, both e.g. *neuron* and *neurozený* will have *-eu-*
+       transcribed as a diphthong, even though it's only appropriate in the
+       first case.
+
+       A few simple cases are covered even in the absence of a tagger via the
+       exceptions mechanism: search for ``-`` in `exceptions.tsv`_.
+
+    .. _exceptions.tsv: https://github.com/dlukes/corpy/blob/master/src/corpy/phonetics/exceptions.tsv
 
     `phrase` is either a string (in which case it is split on whitespace) or an
     iterable of strings (in which case it's considered as already tokenized by
@@ -403,7 +484,9 @@ def transcribe(
     if prosodic_boundary_symbols is None:
         prosodic_boundary_symbols = set()
     matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
-    transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
+    transcribed = ProsodicUnit(to_transcribe).phonetic(
+        alphabet=alphabet, hiatus=hiatus, tagger=tagger
+    )
     return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore
 
 

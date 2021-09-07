@@ -32,6 +32,7 @@ if [ ! -f "$morphodita_tagger" ]; then
 fi
 
 pytest
+>&2 echo 'TIP: To investigate errors in test cases, re-run pytest with --log-level DEBUG.'
 
 # update ReadTheDocs requirements
 rtd_reqs=docs/requirements.txt

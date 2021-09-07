@@ -614,6 +614,8 @@ jste	ste
 (?P<x>kyberneti).	kybernety
 sentiment	sentyment
 telekomuni	telekomuny
+neurva	ne-urva
+neustál	ne-ustál
 # NOTE: you can also add prefixes that don't contain any rewrites
 # but that are allowed to occur in front of rewritten substrings
 ne	ne

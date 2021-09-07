@@ -26,13 +26,51 @@ But other options including IPA are available:
    >>> cs.transcribe("máš hlad", alphabet="IPA")
    [('m', 'aː', 'ʒ'), ('ɦ', 'l', 'a', 't')]
 
-Hyphens can be used to prevent interactions between neighboring phones, e.g.
-assimilation of voicing:
+If you can, always pass a :class:`~corpy.morphodita.Tagger` to
+:func:`~corpy.phonetics.cs.transcribe` (see :doc:`the MorphoDiTa guide
+<morphodita.rst>` on where to download tagger models). The function will use it
+to attempt to be smarter about the pronunciation of words based on their
+morphemic structure. For instance, without a tagger, both *neuron* and
+*neurozený* will have a diphthong:
+
+.. code:: python
+
+   >>> cs.transcribe("neuron")
+   [('n', 'E_u', 'r', 'o', 'n')]
+   >>> cs.transcribe("neurozený")
+   [('n', 'E_u', 'r', 'o', 'z', 'E', 'n', 'i:')]
+
+With a tagger, the *ne-* in *neurozený* will be identified as a prefix and
+*-eu-* will therefore be correctly rendered as a two-vowel sequence:
+
+.. code:: python
+
+   >>> from corpy.morphodita import Tagger
+   >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+   >>> cs.transcribe("neurozený", tagger=tagger)
+   [('n', 'E', 'u', 'r', 'o', 'z', 'E', 'n', 'i:')]
+
+While *neuron* will correctly retain its diphthong:
+
+.. code:: python
+
+   >>> cs.transcribe("neuron", tagger=tagger)
+   [('n', 'E_u', 'r', 'o', 'n')]
+
+Hyphens can be used to manually prevent interactions between neighboring phones,
+e.g. prevent assimilation of voicing:
 
 .. code:: python
 
    >>> cs.transcribe("máš -hlad")
    [('m', 'a:', 'S'), ('h\\', 'l', 'a', 't')]
+
+Or prevent adjacent vowels from merging into a diphthong, even without a tagger:
+
+.. code:: python
+
+   >>> cs.transcribe("ne-urozený")
+   [('n', 'E', 'u', 'r', 'o', 'z', 'E', 'n', 'i:')]
 
 As you can see, these special hyphens get deleted in the process of
 transcription, so if you want a literal hyphen, it must be inside a token with
