@@ -10,7 +10,7 @@ cd "$(dirname "$(realpath "$0")")"
 # - building the docs
 poetry install
 poetry update
-. $(poetry env info -p)/bin/activate ||
+. "$(poetry env info -p)"/bin/activate ||
   { >&2 echo 'Failed to activate project virtualenv!' && exit 1; }
 
 udpipe_model=czech-pdt-ud-2.4-190531.udpipe
