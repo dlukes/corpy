@@ -27,11 +27,10 @@ But other options including IPA are available:
    [('m', 'aː', 'ʒ'), ('ɦ', 'l', 'a', 't')]
 
 If you can, always pass a :class:`~corpy.morphodita.Tagger` to
-:func:`~corpy.phonetics.cs.transcribe` (see :doc:`the MorphoDiTa guide
-<morphodita.rst>` on where to download tagger models). The function will use it
-to attempt to be smarter about the pronunciation of words based on their
-morphemic structure. For instance, without a tagger, both *neuron* and
-*neurozený* will have a diphthong:
+:func:`~corpy.phonetics.cs.transcribe` (see :doc:`morphodita` on where to
+download tagger models). The function will use it to attempt to be smarter about
+the pronunciation of words based on their morphemic structure. For instance,
+without a tagger, both *neuron* and *neurozený* will have a diphthong:
 
 .. code:: python
 
