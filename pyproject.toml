@@ -31,9 +31,6 @@ pytest-xdist = "^1.28"
 sphinx = "^3.4.3"
 furo = "*"
 twine = "^1.13"
-# python linters
-flake8 = "^3.7"
-pylint = "^2.3"
 jedi = "0.17.2"
 
 [tool.poetry.scripts]

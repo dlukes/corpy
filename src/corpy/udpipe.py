@@ -315,9 +315,7 @@ try:
     _register_pprinters(pretty)
     _ipython = get_ipython()  # pylint: disable=invalid-name
     if _ipython is not None:
-        _plain_formatter = _ipython.display_formatter.formatters[  # pylint: disable=invalid-name
-            "text/plain"
-        ]
+        _plain_formatter = _ipython.display_formatter.formatters["text/plain"]
         _register_pprinters(_plain_formatter)
     else:
         LOG.warning(

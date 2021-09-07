@@ -31,8 +31,6 @@ if [ ! -f "$morphodita_tagger" ]; then
   rm -rf "$morphodita" "$morphodita_zip"
 fi
 
-flake8 src/corpy
-pylint src/corpy
 pytest -n auto
 
 # update ReadTheDocs requirements
