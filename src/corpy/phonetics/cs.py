@@ -9,11 +9,23 @@ import unicodedata as ud
 from functools import lru_cache
 from operator import itemgetter
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Set, Tuple, Union  # noqa: F401
+from typing import (
+    cast,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    Union,
+)
 
 import regex as re
 
-# ------------------------------ Utils ------------------------------
+
+#
+# ------------------------------------------------------------------------ Utils {{{1
 
 
 def _filter_comments(lines):
@@ -70,13 +82,13 @@ def _load_voicing_pairs(
     return devoiced2voiced, voiced2devoiced, trigger_voicing, trigger_devoicing
 
 
-def _create_substr_re(substr_list: Iterable[str]) -> re.Regex:
+def _create_substr_re(substr_list: Iterable[str]) -> re.Pattern:
     substr_list = sorted(substr_list, key=len, reverse=True) + ["."]
     return re.compile("|".join(substr_list))
 
 
 class _ExceptionRewriter:
-    def __init__(self, tsv: str) -> None:
+    def __init__(self, tsv: str):
         lines = tsv.splitlines()
         lines.pop(0)
         rules = []
@@ -115,7 +127,8 @@ class _ExceptionRewriter:
         return matched.replace(orig, rewrite)
 
 
-# ------------------------------ Load config ------------------------------
+#
+# ------------------------------------------------------------------ Load config {{{1
 
 
 DIR = Path(__file__)
@@ -145,18 +158,21 @@ REWRITER = _ExceptionRewriter(
 )
 
 
-# ------------------------------ Public API ------------------------------
+#
+#
+# ------------------------------------------------------------------- Public API {{{1
 
 
 class Phone:
     """A single phone.
 
-    You probably don't need to create these by hand, but they will be returned
-    to you from :func:`transcribe`.
+    You probably don't need to create these by hand. They're used internally by
+    :class:`ProsodicUnit` to keep track of word boundaries while keeping all the
+    phones in a flat list.
 
     """
 
-    def __init__(self, value: str, *, word_boundary: bool = False) -> None:
+    def __init__(self, value: str, *, word_boundary: bool = False):
         self.value: str = value
         self.word_boundary = word_boundary
 
@@ -178,7 +194,7 @@ class ProsodicUnit:
 
     """
 
-    def __init__(self, orthographic: List[str]) -> None:
+    def __init__(self, orthographic: List[str]):
         self.orthographic = orthographic
         self._phonetic: Optional[List[Phone]] = None
 
@@ -389,3 +405,6 @@ def transcribe(
     matrix, to_transcribe = _separate_tokens(tokens, prosodic_boundary_symbols)
     transcribed = ProsodicUnit(to_transcribe).phonetic(alphabet=alphabet, hiatus=hiatus)
     return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore
+
+
+# vi: set foldmethod=marker:
