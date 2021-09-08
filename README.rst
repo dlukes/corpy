@@ -54,16 +54,18 @@ Here's an idea of what you can do with CorPy:
   <https://corpy.rtfd.io/en/stable/guides/morphodita.html>`__
 - `easily generate word clouds
   <https://corpy.rtfd.io/en/stable/guides/vis.html>`__
+- run code in `a sanitized global environment
+  <https://corpy.rtfd.io/en/stable/guides/clean_env.html>`__ (useful for
+  debugging in interactive sessions, e.g. with Jupyter notebooks in `JupyterLab
+  <https://jupyterlab.rtfd.io>`__)
 - `generate phonetic transcripts of Czech texts
   <https://corpy.rtfd.io/en/stable/guides/phonetics_cs.html>`__
 - `wrangle corpora in the vertical format
   <https://corpy.rtfd.io/en/stable/guides/vertical.html>`__ devised originally
   for `CWB <http://cwb.sourceforge.net/>`__, used also by `(No)SketchEngine
   <https://nlp.fi.muni.cz/trac/noske/>`__
-- plus some utilities for `interactive Python coding
-  <https://corpy.rtfd.io/en/stable/guides/util.html>`__ (e.g. with Jupyter
-  notebooks in  `JupyterLab <https://jupyterlab.rtfd.io>`__) and the `command
-  line <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
+- plus some `command line utilities
+  <https://corpy.rtfd.io/en/stable/guides/cli.html>`__
 
 .. note::
 

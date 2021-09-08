@@ -1,23 +1,20 @@
-=====================================
-Utility functions for interactive use
-=====================================
+====================================================
+Isolate interactive code from the global environment
+====================================================
 
-The :mod:`corpy.util` module is a collection of small utility functions I
-occasionally find useful, especially when teaching. They're mostly meant for use
-in an interactive session (JupyterLab / IPython), some can even be used as
-`IPython magic commands <https://ipython.readthedocs.io/en/stable/interactive/magics.html>`__
-(remember to run ``%load_ext corpy`` first). Here are some hints explaining when
-and why you might want them.
+As you do exploratory work in an interactive Python session (e.g. IPython in the
+terminal, or JupyterLab or a similar web notebook interface), you inevitably
+accumulate a big hairy blob of global state. Suddenly, a function you've written
+starts misbehaving. You suspect it has inadvertently become entangled in all
+that global state, accessing global variables it shouldn't, and you'd like to
+disentangle it. Where to begin?
 
-Running code in a sanitized global environment with :func:`corpy.util.clean_env`
-================================================================================
-
-Most of the time, this will probably be useful from inside an IPython session
-(either in the terminal or in JupyterLab or a similar web notebook interface) to
-isolate pieces of code from the big hairy blob of global state you may have
-inadvertently accumulated over the course of your interactive coding. Which
-means you'll want to load the ``corpy`` extension and use the cell/line magic
-command it provides:
+:func:`corpy.util.clean_env` to the rescue! It allows you to run a block of code
+in a sanitized global environment (where the exact meaning of *sanitized* is
+fairly customizable). When using an IPython kernel, load the ``corpy``
+extension, so that you can use the `cell/line magic command
+<https://ipython.readthedocs.io/en/stable/interactive/magics.html>`__ it
+provides:
 
 .. ipython::
 
@@ -38,17 +35,29 @@ command it provides:
 
    In [5]: %clean_env print(foo)
 
-See ``%clean_env?`` for details on how to use the magic.
+As you can see, :func:`~corpy.util.clean_env` temporarily hides the global
+variable ``foo``. Why is this useful? When working interactively, you often end
+up creating a lot of global variables while experimenting. Some of them might
+even end up disappearing from the written record, as you edit and delete cells.
+This (partially) invisible global state accumulates and can lead to hard to
+debug problems, where typos pass silently, code mysteriously fails because
+builtin functions have been overwritten, etc. See examples below.
 
-Why is this useful? When working interactively, you often end up creating a lot
-of global variables while experimenting. Some of them might even end up
-disappearing from the written record, as you edit and delete cells. This
-(partially) invisible global state accumulates and can lead to hard to debug
-problems, where typos pass silently, code mysteriously fails because builtin
-functions have been overwritten, etc. See examples below.
+.. note::
+
+   In order to not be restricted to IPython interactive sessions, the examples
+   below primarily use :func:`~corpy.util.clean_env` as a context manager, which
+   works everywhere, including the vanilla Python REPL and scripts. In IPython
+   though, the magic command shown above is much more convenient, and offers all
+   of the same features. Run ``%clean_env?`` in IPython for details on how to
+   use them.
+
+   One option you should definitely know about is ``%clean_env -X``, which is
+   equivalent to ``with clean_env(strict=False): ...`` (see :ref:`the end of the
+   next section <non-strict>` for details on what that does).
 
 Global variables can hide typos
--------------------------------
+===============================
 
 For instance, say you're trying to sort numbers. You define a list of numbers
 called ``numbers``, try the ``sorted`` function, which seems to work, so you
@@ -132,6 +141,8 @@ don't suit you though, you can tweak its behavior by using blacklists or
 whitelists and other options. Check out the documentation for
 :func:`corpy.util.clean_env` for further details.
 
+.. _non-strict:
+
 One common case where you might want to change the defaults is to make
 ``clean_env`` a little bit more lenient, so that it allows all global variables
 within the ``with`` block itself, and only starts pruning them inside function
@@ -165,7 +176,7 @@ and more complicated strategy, which makes it somewhat slower. That's why it's
 opt-in, even though it's very often what you want.
 
 Breaking code by re-assigning built-in functions
-------------------------------------------------
+================================================
 
 Another type of problem that beginners tend to run into is that they
 accidentally overwrite a built-in function. For instance, if you're learning
