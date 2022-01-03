@@ -1,44 +1,53 @@
-[tool.poetry]
+[project]
 name = "corpy"
-version = "0.4.0-dev"
-description = "Tools for processing language data."
-
-authors = ["David Lukes <dafydd.lukes@gmail.com>"]
-license = "GPL-3.0+"
-
-repository = "https://github.com/dlukes/corpy"
 readme = "README.rst"
+description = "Tools for processing language data."
 keywords = ["corpus", "linguistics", "NLP"]
+authors = [
+    {name = "David Lukes", email = "dafydd.lukes@gmail.com"},
+]
+license = {text = "GPL-3.0-or-later"}
+dynamic = ["version"]
 
-[tool.poetry.dependencies]
-python = "^3.7"
-# regex is versioned using calver plus it sticks to the API of stdlib's re
-# module, so whichever latest version is fine
-regex = "*"
-lazy = "^1.4"
-lxml = "^4.6.1"
-wordcloud = "^1.8.1"
-"ufal.morphodita" = "^1.10"
-"ufal.udpipe" = "^1.2"
-numpy = "^1.16"
-click = "^7.0"
+requires-python = ">=3.8"
+dependencies = [
+    # regex is versioned using calver plus it sticks to the API of stdlib's re
+    # module, so whichever latest version is fine
+    "regex",
+    "lazy>=1.4",
+    "lxml>=4.6.1",
+    "wordcloud>=1.8.1",
+    "ufal.morphodita>=1.10",
+    "ufal.udpipe>=1.2",
+    "numpy>=1.16",
+    "click>=7.0",
+]
 
-[tool.poetry.dev-dependencies]
-ipython = "*"
-ipdb = "*"
-pytest = "*"
-furo = {version = "*", allow-prereleases = true}
-twine = "*"
-Sphinx = "^4.1.2"
+[project.urls]
+documentation = "https://corpy.rtfd.io"
+repository = "https://github.com/dlukes/corpy"
 
-[tool.poetry.scripts]
+[project.scripts]
 xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
 
-[tool.pytest.ini_options]
-addopts = '--quiet --doctest-modules --doctest-glob="*.rst"'
-filterwarnings = ['ignore:::^corpy\.?']
-
 [build-system]
-requires = ["poetry>=1"]
-build-backend = "poetry.masonry.api"
+requires = ["pdm-pep517"]
+build-backend = "pdm.pep517.api"
+
+[tool.pdm]
+version = {use_scm = true}
+
+[tool.pdm.dev-dependencies]
+dev = [
+    "ipython",
+    "ipdb",
+    "pytest",
+    "furo",
+    "twine",
+    "sphinx>=4.1.2",
+]
+
+[tool.pytest.ini_options]
+addopts = '--quiet --doctest-modules --doctest-glob="*.rst" --ignore=__pypackages__'
+filterwarnings = ['ignore:::^corpy\.?']

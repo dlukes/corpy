@@ -25,12 +25,12 @@ from datetime import datetime
 
 project = next((Path(__file__).parent.parent / "src").iterdir()).name
 meta = importlib.metadata.metadata(project)
-author = meta["author"]
+author = meta["Author-email"]
 now = datetime.now()
 copyright = f"2016--{now.year}, ÚČNK/{author}"
 
 # The full version, including alpha/beta/rc tags
-release = meta["version"]
+release = meta["Version"]
 
 
 # -- General configuration ---------------------------------------------------
