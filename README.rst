@@ -21,7 +21,7 @@ Installation
 
    $ python3 -m pip install corpy
 
-Only recent versions of Python 3 (3.7+) are supported by design.
+Only recent versions of Python 3 (3.8+) are supported by design.
 
 Help and feedback
 =================

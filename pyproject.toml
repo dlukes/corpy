@@ -9,6 +9,8 @@ authors = [
 license = {text = "GPL-3.0-or-later"}
 dynamic = ["version"]
 
+# NOTE: When bumping the minimum Python, don't forget to bump it at the
+# beginning of the README as well!
 requires-python = ">=3.8"
 dependencies = [
     # regex is versioned using calver plus it sticks to the API of stdlib's re
