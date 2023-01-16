@@ -1,3 +1,8 @@
+# For guidelines on how to write pyproject.toml files, see:
+#
+# - https://peps.python.org/pep-0621/
+# - https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html.
+
 [project]
 name = "corpy"
 readme = "README.rst"
@@ -36,16 +41,16 @@ classifiers = [
 # beginning of the README as well!
 requires-python = ">=3.8"
 dependencies = [
-    # regex is versioned using calver plus it sticks to the API of stdlib's re
-    # module, so whichever latest version is fine
-    "regex",
-    "lazy>=1.4",
-    "lxml>=4.6.1",
-    "wordcloud>=1.8.1",
-    "ufal.morphodita>=1.10",
-    "ufal.udpipe>=1.2",
-    "numpy>=1.16",
-    "click>=7.0",
+  # regex is versioned using calver plus it sticks to the API of stdlib's re
+  # module, so whichever latest version is fine
+  "regex",
+  "lazy>=1.4",
+  "lxml>=4.6.1",
+  "wordcloud>=1.8.1",
+  "ufal.morphodita>=1.10",
+  "ufal.udpipe>=1.2",
+  "numpy>=1.16",
+  "click>=7.0",
 ]
 
 [project.urls]
@@ -57,23 +62,27 @@ Source = "https://github.com/dlukes/corpy"
 xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
 
-[build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
-
-[tool.pdm]
-version = {use_scm = true}
-
-[tool.pdm.dev-dependencies]
+[project.optional-dependencies]
 dev = [
-    "ipython",
-    "ipdb",
-    "pytest",
-    "furo",
-    "twine",
-    "sphinx>=4.1.2",
+  "ipython",
+  "ipdb",
+  "pytest",
+  "build",
+  "furo",
+  "twine",
+  "sphinx>=4.1.2",
 ]
 
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools_scm]
+write_to = "src/corpy/__init__.py"
+
 [tool.pytest.ini_options]
-addopts = '--quiet --doctest-modules --doctest-glob="*.rst" --ignore=__pypackages__'
+addopts = '--doctest-modules --doctest-glob="*.rst" --ignore=__pypackages__'
 filterwarnings = ['ignore:::^corpy\.?']

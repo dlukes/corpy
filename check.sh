@@ -3,39 +3,20 @@
 set -eufo pipefail
 cd "$(dirname "$(realpath "$0")")"
 
-# Make sure package and dependencies are up-to-date inside __pypackages__. This
-# is needed for steps that run on the installed package, not the source tree:
+# Make sure package and dependencies are up-to-date. This is needed for steps
+# that run on the installed package, not the source tree:
 #
 # - testing (tests should pass with the latest compatible dependencies)
 # - exporting ReadTheDocs requirements
 # - building the docs
-pdm update
-
-udpipe_model=czech-pdt-ud-2.4-190531.udpipe
-if [ ! -f "$udpipe_model" ]; then
-  >&2 echo "Fetching $udpipe_model..."
-  curl --silent --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-2998/"$udpipe_model"
-fi
-
-morphodita=czech-morfflex-pdt-161115
-morphodita_zip="$morphodita".zip
-morphodita_tagger="$morphodita".tagger
-if [ ! -f "$morphodita_tagger" ]; then
-  >&2 echo "Fetching $morphodita_zip..."
-  curl --silent --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-1836/"$morphodita_zip"
-  >&2 echo "Extracting $morphodita_tagger..."
-  unzip -q "$morphodita_zip"
-  mv "$morphodita/$morphodita_tagger" .
-  rm -rf "$morphodita" "$morphodita_zip"
-fi
-
-pdm run pytest
->&2 echo 'TIP: To investigate errors in test cases, re-run pytest with --log-level DEBUG.'
+make upgrade
+make models
+make test
 
 # update ReadTheDocs requirements
 rtd_reqs=docs/requirements.txt
 echo "# ---8<--- MANAGED BY check.sh; DO NOT EDIT! --->8---" >"$rtd_reqs"
-pdm export --dev --without-hashes |
+venv/bin/python -m pip freeze |
   grep -iP '^(sphinx|furo|ipython)==' >>"$rtd_reqs"
 echo "# ---8<----------------------------------------->8---" >>"$rtd_reqs"
 
@@ -43,12 +24,12 @@ echo "# ---8<----------------------------------------->8---" >>"$rtd_reqs"
 # -n is nit-picky mode, which checks for missing references; however, we're only
 # interested in missing references to stuff defined as part of corpy, and not
 # the warning emitted upon importing corpy when no IPython session is found
-pdm run sphinx-build -j auto -Ean docs docs/_build 2>&1 |
+venv/bin/sphinx-build -j auto -Ean docs docs/_build 2>&1 |
   { grep -P "WARNING.*corpy" || [ $? = 1 ]; } |
   { grep -Pv "IPython session not found" || [ $? = 1 ]; }
 # possibly also check external links every now and then
-# pdm run sphinx-build -b linkcheck docs docs/_build
+# venv/bin/sphinx-build -b linkcheck docs docs/_build
 
-rm -rf dist
-pdm build
-pdm run twine check dist/*
+make clean
+make dist
+>&2 echo "Run make publish to upload a new release to PyPI."
