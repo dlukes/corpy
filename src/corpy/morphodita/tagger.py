@@ -46,15 +46,15 @@ class Tagger:
 
     @lazy
     def _pdt_to_conll2009_converter(self):
-        return ufal.TagsetConverter_newPdtToConll2009Converter()  # type: ignore
+        return ufal.TagsetConverter.newPdtToConll2009Converter()  # type: ignore
 
     @lazy
     def _strip_lemma_comment_converter(self):
-        return ufal.TagsetConverter_newStripLemmaCommentConverter(self._morpho)  # type: ignore
+        return ufal.TagsetConverter.newStripLemmaCommentConverter(self._morpho)  # type: ignore
 
     @lazy
     def _strip_lemma_id_converter(self):
-        return ufal.TagsetConverter_newStripLemmaIdConverter(self._morpho)  # type: ignore
+        return ufal.TagsetConverter.newStripLemmaIdConverter(self._morpho)  # type: ignore
 
     @lru_cache(maxsize=16)
     def _get_converter(self, convert):
@@ -173,7 +173,7 @@ class Tagger:
         details about parameters.
 
         """
-        vtokenizer = ufal.Tokenizer_newVerticalTokenizer()  # type: ignore
+        vtokenizer = ufal.Tokenizer.newVerticalTokenizer()  # type: ignore
         converter = self._get_converter(convert)
         forms = ufal.Forms()  # type: ignore
         tagged_lemmas = ufal.TaggedLemmas()  # type: ignore
