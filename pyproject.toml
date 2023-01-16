@@ -58,22 +58,44 @@ xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
 
 [build-system]
-requires = ["pdm-pep517"]
-build-backend = "pdm.pep517.api"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
 
-[tool.pdm]
-version = {use_scm = true}
+[tool.hatch.version]
+source = "vcs"
+path = "src/corpy/__about__.py"
 
-[tool.pdm.dev-dependencies]
-dev = [
-    "ipython",
-    "ipdb",
-    "pytest",
-    "furo",
-    "twine",
-    "sphinx>=4.1.2",
+[tool.hatch.envs.default]
+dependencies = [
+  "ipython",
+  "ipdb",
+  "pytest",
+  "pytest-cov",
+  "furo",
+  # "twine",  # TODO: Maybe not needed anymore?
+  "sphinx>=4.1.2",
 ]
+[tool.hatch.envs.default.scripts]
+cov = "pytest --doctest-modules --doctest-glob=*.rst --cov-report=term-missing --cov-config=pyproject.toml --cov=src/corpy --cov=tests {args}"
+# Scripts can build on other scripts: test is based on cov above.
+test = "cov --no-cov {args}"
+
+[[tool.hatch.envs.test.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11"]
 
 [tool.pytest.ini_options]
-addopts = '--quiet --doctest-modules --doctest-glob="*.rst" --ignore=__pypackages__'
 filterwarnings = ['ignore:::^corpy\.?']
+
+[tool.coverage.run]
+branch = true
+parallel = true
+omit = [
+  "src/corpy/__about__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
