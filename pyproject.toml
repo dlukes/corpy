@@ -8,6 +8,29 @@ authors = [
 ]
 license = {text = "GPL-3.0-or-later"}
 dynamic = ["version"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+  "Natural Language :: Czech",
+  "Natural Language :: English",
+  "Natural Language :: Slovak",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+  "Topic :: Education",
+  "Topic :: Text Processing :: Linguistic",
+  "Typing :: Typed"
+]
 
 # NOTE: When bumping the minimum Python, don't forget to bump it at the
 # beginning of the README as well!
@@ -26,8 +49,9 @@ dependencies = [
 ]
 
 [project.urls]
-documentation = "https://corpy.rtfd.io"
-repository = "https://github.com/dlukes/corpy"
+Documentation = "https://corpy.rtfd.io"
+Issues = "https://github.com/dlukes/corpy/issues"
+Source = "https://github.com/dlukes/corpy"
 
 [project.scripts]
 xc = "corpy.scripts.xc:main"
