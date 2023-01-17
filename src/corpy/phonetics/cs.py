@@ -110,7 +110,10 @@ class _ExceptionRewriter:
         # reverse sort by length of substring matched, so that longest match
         # applies
         rules.sort(key=itemgetter(1), reverse=True)
-        re_str = "(" + "|".join(match for (match, _, _) in rules) + ")"
+        # allow trailing hyphens -- _rewrite allows multiple rewrites only if
+        # they're contiguous from the beginning of the string, but hyphens
+        # are special, so just skip over them
+        re_str = "(" + "|".join(pat for (pat, _, _) in rules) + ")-*"
         self._re = re.compile(re_str)
         self._orig2rewrite: Dict[str, str] = {
             orig: rewrite for (_, orig, rewrite) in rules
