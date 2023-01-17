@@ -45,7 +45,7 @@ With a tagger, the *ne-* in *neurozený* will be identified as a prefix and
 .. code:: python
 
    >>> from corpy.morphodita import Tagger
-   >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+   >>> tagger = Tagger("./czech-morfflex-pdt.tagger")
    >>> cs.transcribe("neurozený", tagger=tagger)
    [('n', 'E', 'u', 'r', 'o', 'z', 'E', 'n', 'i:')]
 

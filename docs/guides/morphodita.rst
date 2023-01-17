@@ -78,7 +78,7 @@ Initialize a new tagger:
 .. code:: python
 
    >>> from corpy.morphodita import Tagger
-   >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+   >>> tagger = Tagger("./czech-morfflex-pdt.tagger")
 
 Tokenize, tag and lemmatize a text represented as a string:
 
@@ -87,11 +87,11 @@ Tokenize, tag and lemmatize a text represented as a string:
    >>> from pprint import pprint
    >>> tokens = list(tagger.tag("Je zima. Bude sněžit."))
    >>> pprint(tokens)
-   [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+   [Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
     Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
     Token(word='.', lemma='.', tag='Z:-------------'),
-    Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-    Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+    Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+    Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
     Token(word='.', lemma='.', tag='Z:-------------')]
 
 With sentence boundaries:
@@ -100,11 +100,11 @@ With sentence boundaries:
 
    >>> sents = list(tagger.tag("Je zima. Bude sněžit.", sents=True))
    >>> pprint(sents)
-   [[Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+   [[Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
      Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
      Token(word='.', lemma='.', tag='Z:-------------')],
-    [Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-     Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+    [Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+     Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
      Token(word='.', lemma='.', tag='Z:-------------')]]
 
 Tag and lemmatize an already sentence-split and tokenized piece of text,
@@ -114,9 +114,9 @@ represented as an iterable of iterables of strings:
 
    >>> tokens = list(tagger.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
    >>> pprint(tokens)
-   [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+   [Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
     Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
     Token(word='.', lemma='.', tag='Z:-------------'),
-    Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-    Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+    Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+    Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
     Token(word='.', lemma='.', tag='Z:-------------')]

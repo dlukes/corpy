@@ -29,7 +29,7 @@ def test_tokenize_with_sents():
 
 
 def test_tokenizer_from_tagger():
-    tokenizer = Tokenizer.from_tagger("./czech-morfflex-pdt-161115.tagger")
+    tokenizer = Tokenizer.from_tagger("./czech-morfflex-pdt.tagger")
     tokens = list(tokenizer.tokenize("Kočka leze dírou, pes oknem."))
     assert tokens == "Kočka leze dírou , pes oknem .".split()
 
@@ -61,12 +61,12 @@ def test_tokenize_two_strings_intermittently_with_same_tokenizer():
 
 
 def test_tagger_simple():
-    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tagger = Tagger("./czech-morfflex-pdt.tagger")
     tokens = list(tagger.tag("Kočka leze dírou, pes oknem."))
     print(tokens)
     assert tokens == [
         Token(word="Kočka", lemma="kočka", tag="NNFS1-----A----"),
-        Token(word="leze", lemma="lézt", tag="VB-S---3P-AA---"),
+        Token(word="leze", lemma="lézt", tag="VB-S---3P-AAI--"),
         Token(word="dírou", lemma="díra", tag="NNFS7-----A----"),
         Token(word=",", lemma=",", tag="Z:-------------"),
         Token(word="pes", lemma="pes_^(zvíře)", tag="NNMS1-----A----"),
@@ -76,13 +76,13 @@ def test_tagger_simple():
 
 
 def test_tagger_with_sents():
-    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tagger = Tagger("./czech-morfflex-pdt.tagger")
     tokens = list(tagger.tag("Kočka leze dírou. Pes oknem.", sents=True))
     print(tokens)
     assert tokens == [
         [
             Token(word="Kočka", lemma="kočka", tag="NNFS1-----A----"),
-            Token(word="leze", lemma="lézt", tag="VB-S---3P-AA---"),
+            Token(word="leze", lemma="lézt", tag="VB-S---3P-AAI--"),
             Token(word="dírou", lemma="díra", tag="NNFS7-----A----"),
             Token(word=".", lemma=".", tag="Z:-------------"),
         ],
@@ -98,7 +98,7 @@ def test_tag_two_strings_in_parallel_with_same_tagger():
     # this didn't use to work; previously, the first generator was truncated
     # after the second started to be yielded from, and even before that,
     # unexpected and incorrect results were generated
-    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tagger = Tagger("./czech-morfflex-pdt.tagger")
     tokens1 = []
     tokens2 = []
     iter1 = tagger.tag("Kočka leze dírou.")
@@ -112,7 +112,7 @@ def test_tag_two_strings_in_parallel_with_same_tagger():
 
 def test_tag_two_strings_intermittently_with_same_tagger():
     # ditto
-    tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+    tagger = Tagger("./czech-morfflex-pdt.tagger")
     iter1 = tagger.tag("Kočka leze dírou.")
     iter2 = tagger.tag("Pes oknem.")
     assert next(iter1).word == "Kočka"

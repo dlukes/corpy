@@ -5,7 +5,7 @@ from corpy.phonetics import cs
 from corpy.morphodita import Tagger
 
 SCRIPT_DIR = Path(__file__).parent
-TAGGER = Tagger(SCRIPT_DIR.parent / "czech-morfflex-pdt-161115.tagger")
+TAGGER = Tagger(SCRIPT_DIR.parent / "czech-morfflex-pdt.tagger")
 
 
 def test_voicing_assimilation_over_word_boundaries():

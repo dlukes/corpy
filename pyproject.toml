@@ -84,5 +84,5 @@ where = ["src"]
 write_to = "src/corpy/__init__.py"
 
 [tool.pytest.ini_options]
-addopts = '--doctest-modules --doctest-glob="*.rst" --ignore=__pypackages__'
+addopts = '--doctest-modules --doctest-glob="*.rst" --doctest-continue-on-failure'
 filterwarnings = ['ignore:::^corpy\.?']

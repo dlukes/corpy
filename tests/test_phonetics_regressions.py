@@ -5,7 +5,7 @@ from corpy.phonetics import cs
 from corpy.morphodita import Tagger
 
 SCRIPT_DIR = Path(__file__).parent
-TAGGER = Tagger(SCRIPT_DIR.parent / "czech-morfflex-pdt-161115.tagger")
+TAGGER = Tagger(SCRIPT_DIR.parent / "czech-morfflex-pdt.tagger")
 CASES = [
     case.split("\t")
     for case in (SCRIPT_DIR / "test_phonetics_regressions.tsv")

@@ -37,18 +37,24 @@ upgrade:
 
 # ---------------------------------------------------------------------- Testing {{{1
 
-udpipe_model := czech-pdt-ud-2.4-190531.udpipe
-$(udpipe_model):
-	curl --silent --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-2998/$(udpipe_model)
+lindat := https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle
 
-morphodita := czech-morfflex-pdt-161115
+udpipe_handle := 11234/1-3131
+udpipe_model := czech-pdt-ud-2.5-191206.udpipe
+$(udpipe_model):
+	curl --remote-name-all $(lindat)/$(udpipe_handle)/$(udpipe_model)
+	ln -s $(udpipe_model) czech-pdt-ud.udpipe
+
+morphodita_handle := 11234/1-4794
+morphodita := czech-morfflex2.0-pdtc1.0-220710
 morphodita_zip := $(morphodita).zip
 morphodita_tagger := $(morphodita).tagger
 $(morphodita_tagger):
-	curl --silent --remote-name-all https://lindat.mff.cuni.cz/repository/xmlui/bitstream/handle/11234/1-1836/$(morphodita_zip)
+	curl --remote-name-all $(lindat)/$(morphodita_handle)/$(morphodita_zip)
 	unzip -q $(morphodita_zip)
 	mv $(morphodita)/$(morphodita_tagger) .
 	rm -rf $(morphodita) $(morphodita_zip)
+	ln -s $(morphodita_tagger) czech-morfflex-pdt.tagger
 
 models: $(udpipe_model) $(morphodita_tagger)
 

@@ -105,31 +105,31 @@ class Tagger:
         :return: An iterator over the tagged text, possibly grouped into
             sentences if ``sents=True``.
 
-        >>> tagger = Tagger("./czech-morfflex-pdt-161115.tagger")
+        >>> tagger = Tagger("./czech-morfflex-pdt.tagger")
         >>> from pprint import pprint
         >>> tokens = list(tagger.tag("Je zima. Bude sněžit."))
         >>> pprint(tokens)
-        [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+        [Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
          Token(word='.', lemma='.', tag='Z:-------------'),
-         Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-         Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+         Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+         Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
          Token(word='.', lemma='.', tag='Z:-------------')]
         >>> tokens = list(tagger.tag([['Je', 'zima', '.'], ['Bude', 'sněžit', '.']]))
         >>> pprint(tokens)
-        [Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+        [Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
          Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
          Token(word='.', lemma='.', tag='Z:-------------'),
-         Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-         Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+         Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+         Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
          Token(word='.', lemma='.', tag='Z:-------------')]
         >>> sents = list(tagger.tag("Je zima. Bude sněžit.", sents=True))
         >>> pprint(sents)
-        [[Token(word='Je', lemma='být', tag='VB-S---3P-AA---'),
+        [[Token(word='Je', lemma='být', tag='VB-S---3P-AAI--'),
           Token(word='zima', lemma='zima-1', tag='NNFS1-----A----'),
           Token(word='.', lemma='.', tag='Z:-------------')],
-         [Token(word='Bude', lemma='být', tag='VB-S---3F-AA---'),
-          Token(word='sněžit', lemma='sněžit_:T', tag='Vf--------A----'),
+         [Token(word='Bude', lemma='být', tag='VB-S---3F-AAI--'),
+          Token(word='sněžit', lemma='sněžit', tag='Vf--------A-I--'),
           Token(word='.', lemma='.', tag='Z:-------------')]]
 
         """

@@ -48,7 +48,7 @@ Tagging and parsing text using UDPipe is fairly simple. Just load a UDPipe
 .. code:: python
 
    >>> from corpy.udpipe import Model
-   >>> m = Model("./czech-pdt-ud-2.4-190531.udpipe")
+   >>> m = Model("./czech-pdt-ud.udpipe")
 
 And process some text using the :meth:`~corpy.udpipe.Model.process` method (the
 method creates a generator, so you'll need e.g. :func:`list` to tease all of the
@@ -81,25 +81,25 @@ pretty-print the output using the :func:`~corpy.udpipe.pprint` function:
              form='Je',
              lemma='být',
              xpostag='VB-S---3P-AA---',
-             upostag='VERB',
+             upostag='AUX',
              feats='Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
-             head=0,
-             deprel='root'),
+             head=2,
+             deprel='cop'),
         Word(id=2,
              form='zima',
              lemma='zima',
              xpostag='NNFS1-----A----',
              upostag='NOUN',
              feats='Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos',
-             head=1,
-             deprel='nsubj',
+             head=0,
+             deprel='root',
              misc='SpaceAfter=No'),
         Word(id=3,
              form='.',
              lemma='.',
              xpostag='Z:-------------',
              upostag='PUNCT',
-             head=1,
+             head=2,
              deprel='punct')]),
     Sentence(
       comments=['# sent_id = 2', '# text = Bude sněžit.'],
@@ -171,10 +171,10 @@ using the :func:`~corpy.udpipe.pprint_config` function:
              form='Je',
              lemma='být',
              xpostag='VB-S---3P-AA---',
-             upostag='VERB',
+             upostag='AUX',
              feats='Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
-             head=0,
-             deprel='root',
+             head=2,
+             deprel='cop',
              deps='',
              misc=''),
         Word(id=2,
@@ -183,8 +183,8 @@ using the :func:`~corpy.udpipe.pprint_config` function:
              xpostag='NNFS1-----A----',
              upostag='NOUN',
              feats='Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos',
-             head=1,
-             deprel='nsubj',
+             head=0,
+             deprel='root',
              deps='',
              misc='SpaceAfter=No'),
         Word(id=3,
@@ -193,7 +193,7 @@ using the :func:`~corpy.udpipe.pprint_config` function:
              xpostag='Z:-------------',
              upostag='PUNCT',
              feats='',
-             head=1,
+             head=2,
              deprel='punct',
              deps='',
              misc='')],
@@ -279,7 +279,7 @@ and output it in the CoNLL-U format. You can do it like so:
    ... Bude sněžit ."""
    >>> conllu_sents = list(m.process(horizontal, in_format="horizontal", out_format="conllu"))
    >>> conllu_sents
-   ['# newdoc\n# newpar\n# sent_id = 1\n1\tJe\tbýt\tVERB\tVB-S---3P-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act\t0\troot\t_\t_\n2\tzima\tzima\tNOUN\tNNFS1-----A----\tCase=Nom|Gender=Fem|Number=Sing|Polarity=Pos\t1\tnsubj\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t1\tpunct\t_\t_\n\n', '# sent_id = 2\n1\tBude\tbýt\tAUX\tVB-S---3F-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act\t2\taux\t_\t_\n2\tsněžit\tsněžit\tVERB\tVf--------A----\tAspect=Imp|Polarity=Pos|VerbForm=Inf\t0\troot\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t2\tpunct\t_\t_\n\n']
+   ['# newdoc\n# newpar\n# sent_id = 1\n1\tJe\tbýt\tAUX\tVB-S---3P-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act\t2\tcop\t_\t_\n2\tzima\tzima\tNOUN\tNNFS1-----A----\tCase=Nom|Gender=Fem|Number=Sing|Polarity=Pos\t0\troot\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t2\tpunct\t_\t_\n\n', '# sent_id = 2\n1\tBude\tbýt\tAUX\tVB-S---3F-AA---\tMood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act\t2\taux\t_\t_\n2\tsněžit\tsněžit\tVERB\tVf--------A----\tAspect=Imp|Polarity=Pos|VerbForm=Inf\t0\troot\t_\t_\n3\t.\t.\tPUNCT\tZ:-------------\t_\t2\tpunct\t_\t_\n\n']
 
 That's a bit messy, but trust me that ``conllu_sents`` is just a list of two
 strings, each string representing one sentence. Or, if you don't trust me:
@@ -294,15 +294,20 @@ strings, each string representing one sentence. Or, if you don't trust me:
 To give you an idea of the format, let's just join the sentences and print them
 out:
 
+..
+   WARNING: +NORMALIZE_WHITESPACE only affects the check, not the diff pytest
+   renders if the check fails. In other words, the diff might make it look like
+   the test failed because of whitespace (among other things), when it didn't.
+
 .. code:: python
 
    >>> print("".join(conllu_sents), end="")  # doctest: +NORMALIZE_WHITESPACE
    # newdoc
    # newpar
    # sent_id = 1
-   1	Je	být	VERB	VB-S---3P-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act	0	root	_	_
-   2	zima	zima	NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos	1	nsubj	_	_
-   3	.	.	PUNCT	Z:-------------	_	1	punct	_	_
+   1	Je	být	AUX	VB-S---3P-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act	2	cop	_	_
+   2	zima	zima	NOUN	NNFS1-----A----	Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos	0	root	_	_
+   3	.	.	PUNCT	Z:-------------	_	2	punct	_	_
    <BLANKLINE>
    # sent_id = 2
    1	Bude	být	AUX	VB-S---3F-AA---	Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Fut|VerbForm=Fin|Voice=Act	2	aux	_	_
@@ -367,24 +372,24 @@ You can mix and match this with tagging and parsing the data using a
              form='Je',
              lemma='být',
              xpostag='VB-S---3P-AA---',
-             upostag='VERB',
+             upostag='AUX',
              feats='Mood=Ind|Number=Sing|Person=3|Polarity=Pos|Tense=Pres|VerbForm=Fin|Voice=Act',
-             head=0,
-             deprel='root'),
+             head=2,
+             deprel='cop'),
         Word(id=2,
              form='zima',
              lemma='zima',
              xpostag='NNFS1-----A----',
              upostag='NOUN',
              feats='Case=Nom|Gender=Fem|Number=Sing|Polarity=Pos',
-             head=1,
-             deprel='nsubj'),
+             head=0,
+             deprel='root'),
         Word(id=3,
              form='.',
              lemma='.',
              xpostag='Z:-------------',
              upostag='PUNCT',
-             head=1,
+             head=2,
              deprel='punct')]),
     Sentence(
       comments=['# sent_id = 2'],
