@@ -138,7 +138,7 @@ class _ExceptionRewriter:
         orig = match.group("x")
         # what we want to replace it with
         rewrite = self._orig2rewrite[orig]
-        return matched.replace(orig, rewrite)
+        return matched.replace(orig, rewrite, 1)
 
 
 #
