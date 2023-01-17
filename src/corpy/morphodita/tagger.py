@@ -1,12 +1,11 @@
 """An interface to MorphoDiTa taggers.
 
 """
-import warnings
-from lazy import lazy
+from collections.abc import Iterable, Iterator
 from functools import lru_cache
 from pathlib import Path
-from collections.abc import Iterable
-from typing import Union, Iterator, List, NamedTuple
+from typing import Literal, NamedTuple, overload
+import warnings
 
 import ufal.morphodita as ufal
 
@@ -21,7 +20,6 @@ class Tagger:
     """A MorphoDiTa morphological tagger and lemmatizer.
 
     :param tagger_path: Path to the pre-compiled tagging models to load.
-    :type tagger_path: str or pathlib.Path
 
     """
 
@@ -34,9 +32,9 @@ class Tagger:
         "strings!) of strings as the ``text`` parameter."
     )
 
-    def __init__(self, tagger_path: Union[Path, str]):
+    def __init__(self, tagger_path: Path | str):
         self._tagger_path = tagger_path
-        self._tagger = ufal.Tagger.load(str(tagger_path))  # type: ignore
+        self._tagger = ufal.Tagger.load(str(tagger_path))
         if self._tagger is None:
             raise RuntimeError(f"Unable to load tagger from {tagger_path!r}!")
         self._morpho = self._tagger.getMorpho()
@@ -44,66 +42,80 @@ class Tagger:
         if not self._has_tokenizer:
             warnings.warn(self._NO_TOKENIZER.format(tagger_path))
 
-    @lazy
-    def _pdt_to_conll2009_converter(self):
-        return ufal.TagsetConverter.newPdtToConll2009Converter()  # type: ignore
-
-    @lazy
-    def _strip_lemma_comment_converter(self):
-        return ufal.TagsetConverter.newStripLemmaCommentConverter(self._morpho)  # type: ignore
-
-    @lazy
-    def _strip_lemma_id_converter(self):
-        return ufal.TagsetConverter.newStripLemmaIdConverter(self._morpho)  # type: ignore
-
     @lru_cache(maxsize=16)
-    def _get_converter(self, convert):
-        try:
-            converter = (
-                getattr(self, "_" + convert + "_converter")
-                if convert is not None
-                else None
-            )
-        except AttributeError as err:
-            converters = [
-                a[1:-10]
-                for a in dir(self)
-                if "converter" in a and a != "_get_converter"
-            ]
-            raise ValueError(
-                "Unknown converter {!r}. Available converters: "
-                "{!r}.".format(convert, converters)
-            ) from err
-        return converter
+    def _get_converter(self, convert: str | None) -> ufal.TagsetConverter | None:
+        match convert:
+            case "pdt_to_conll2009":
+                return ufal.TagsetConverter.newPdtToConll2009Converter()
+            case "strip_lemma_comment":
+                return ufal.TagsetConverter.newStripLemmaCommentConverter(self._morpho)
+            case "strip_lemma_id":
+                return ufal.TagsetConverter.newStripLemmaIdConverter(self._morpho)
+            case None:
+                return None
+            case _:
+                raise ValueError(
+                    f"Unknown converter {convert!r}. Available converters: "
+                    "pdt_to_conll2009, strip_lemma_comment, strip_lemma_id."
+                )
 
-    # NOTE: Type checkers typically won't be able to infer whether your
-    # particular call results in Iterator[Token] or Iterator[List[Token]]. Use
-    # typing.cast to tell them which it is.
+    @overload
     def tag(
-        self, text, *, sents=False, guesser=False, convert=None
-    ) -> Union[Iterator[Token], Iterator[List[Token]]]:
+        self,
+        text: str | Iterable[Iterable[str]],
+        *,
+        sents: Literal[False] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token]:
+        ...
+
+    @overload
+    def tag(
+        self,
+        text: str | Iterable[Iterable[str]],
+        *,
+        sents: Literal[True] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[list[Token]]:
+        ...
+
+    @overload
+    def tag(
+        self,
+        text: str | Iterable[Iterable[str]],
+        *,
+        sents: bool = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
+        ...
+
+    def tag(
+        self,
+        text: str | Iterable[Iterable[str]],
+        *,
+        sents: bool = False,
+        guesser: bool = False,
+        convert: str | None = None,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
         """Perform morphological tagging and lemmatization on text.
 
-        If ``text`` is a string, sentence-split, tokenize and tag that
-        string. If it's an iterable of iterables (typically a list of lists),
-        then take each nested iterable as a separate sentence and tag it,
-        honoring the provided sentence boundaries and tokenization.
+        If ``text`` is a string, sentence-split, tokenize and tag that string.
+        If it's an iterable of iterables of strings (typically a list of lists
+        of strings), then take each nested iterable as a separate sentence and
+        tag it, honoring the provided sentence boundaries and tokenization.
 
-        :param text: Input text.
-        :type text: either str (tokenization is left to the tagger) or iterable
-            of iterables (of str), representing individual sentences
-        :param sents: Whether to signal sentence boundaries by outputting a
-            sequence of lists (sentences).
-        :type sents: bool
-        :param guesser: Whether to use the morphological guesser provided with
+        :param text: Input text:
+        :param sents: If ``True``, return an iterator of lists of tokens, each
+            list being a sentence, instead of a flat iterator of tokens.
+        :param guesser: If ``True``, use the morphological guesser provided with
             the tagger (if available).
-        :type guesser: bool
         :param convert: Conversion strategy to apply to lemmas and / or tags
-            before outputting them.
-        :type convert: str, one of "pdt_to_conll2009", "strip_lemma_comment" or
-            "strip_lemma_id", or None if no conversion is required
-        :return: An iterator over the tagged text, possibly grouped into
-            sentences if ``sents=True``.
+            before outputting them. One of ``"pdt_to_conll2009"``,
+            ``"strip_lemma_comment"`` or ``"strip_lemma_id"``, or ``None`` if no
+            conversion is required.
 
         >>> tagger = Tagger("./czech-morfflex-pdt.tagger")
         >>> from pprint import pprint
@@ -134,21 +146,63 @@ class Tagger:
 
         """
         if isinstance(text, str):
-            yield from self.tag_untokenized(text, sents, guesser, convert)
+            yield from self.tag_untokenized(
+                text, sents=sents, guesser=guesser, convert=convert
+            )
         # The other accepted type of input is an iterable of iterables of
         # strings, but we only do a partial check whether the top-level object
-        # is an Iterable, because it would have to be consumed in order to
-        # inspect its first item. A second check which signals the frequent
-        # mistake of passing an iterable of strings (which results in tagging
-        # each character separately) occurs in ``Tagger.tag_tokenized()``.
+        # is an iterable, because e.g. generators would have to be consumed in
+        # order to inspect its first item. A second check which signals the
+        # frequent mistake of passing an iterable of strings (which results in
+        # tagging each character separately) occurs in ``Tagger.tag_tokenized()``.
         elif isinstance(text, Iterable):
-            yield from self.tag_tokenized(text, sents, guesser, convert)
+            yield from self.tag_tokenized(
+                text, sents=sents, guesser=guesser, convert=convert
+            )
         else:
             raise TypeError(self._TEXT_REQS)
 
+    @overload
     def tag_untokenized(
-        self, text, sents=False, guesser=False, convert=None
-    ) -> Union[Iterator[Token], Iterator[List[Token]]]:
+        self,
+        text: str,
+        *,
+        sents: Literal[False] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token]:
+        ...
+
+    @overload
+    def tag_untokenized(
+        self,
+        text: str,
+        *,
+        sents: Literal[True] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[list[Token]]:
+        ...
+
+    @overload
+    def tag_untokenized(
+        self,
+        text: str,
+        *,
+        sents: bool = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
+        ...
+
+    def tag_untokenized(
+        self,
+        text: str,
+        *,
+        sents: bool = False,
+        guesser: bool = False,
+        convert: str | None = None,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
         """This is the method :meth:`tag` delegates to when `text` is a string.
         See docstring for :meth:`tag` for details about parameters.
 
@@ -158,26 +212,70 @@ class Tagger:
         tokenizer = self._tagger.newTokenizer()
         tokenizer.setText(text)
         converter = self._get_converter(convert)
-        forms = ufal.Forms()  # type: ignore
-        tagged_lemmas = ufal.TaggedLemmas()  # type: ignore
-        token_ranges = ufal.TokenRanges()  # type: ignore
+        forms = ufal.Forms()
+        tagged_lemmas = ufal.TaggedLemmas()
+        token_ranges = ufal.TokenRanges()
         yield from self._tag(
-            tokenizer, sents, guesser, converter, forms, tagged_lemmas, token_ranges
+            tokenizer,
+            sents,
+            self._morpho.GUESSER if guesser else self._morpho.NO_GUESSER,
+            converter,
+            forms,
+            tagged_lemmas,
+            token_ranges,
         )
 
+    @overload
     def tag_tokenized(
-        self, text, sents=False, guesser=False, convert=None
-    ) -> Union[Iterator[Token], Iterator[List[Token]]]:
+        self,
+        text: Iterable[Iterable[str]],
+        *,
+        sents: Literal[False] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token]:
+        ...
+
+    @overload
+    def tag_tokenized(
+        self,
+        text: Iterable[Iterable[str]],
+        *,
+        sents: Literal[True] = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[list[Token]]:
+        ...
+
+    @overload
+    def tag_tokenized(
+        self,
+        text: Iterable[Iterable[str]],
+        *,
+        sents: bool = ...,
+        guesser: bool = ...,
+        convert: str | None = ...,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
+        ...
+
+    def tag_tokenized(
+        self,
+        text: Iterable[Iterable[str]],
+        *,
+        sents: bool = False,
+        guesser: bool = False,
+        convert: str | None = None,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
         """This is the method :meth:`tag` delegates to when `text` is an
         iterable of iterables of strings. See docstring for :meth:`tag` for
         details about parameters.
 
         """
-        vtokenizer = ufal.Tokenizer.newVerticalTokenizer()  # type: ignore
+        vtokenizer = ufal.Tokenizer.newVerticalTokenizer()
         converter = self._get_converter(convert)
-        forms = ufal.Forms()  # type: ignore
-        tagged_lemmas = ufal.TaggedLemmas()  # type: ignore
-        token_ranges = ufal.TokenRanges()  # type: ignore
+        forms = ufal.Forms()
+        tagged_lemmas = ufal.TaggedLemmas()
+        token_ranges = ufal.TokenRanges()
         for sent in text:
             # refuse to process if sent is a string (because that would result
             # in tagging each character separately, which is nonsensical), or
@@ -188,16 +286,62 @@ class Tagger:
             yield from self._tag(
                 vtokenizer,
                 sents,
-                guesser,
+                self._morpho.GUESSER if guesser else self._morpho.NO_GUESSER,
                 converter,
                 forms,
                 tagged_lemmas,
                 token_ranges,
             )
 
+    @overload
     def _tag(
-        self, tokenizer, sents, guesser, converter, forms, tagged_lemmas, token_ranges
-    ) -> Union[Iterator[Token], Iterator[List[Token]]]:
+        self,
+        tokenizer: ufal.Tokenizer,
+        sents: Literal[False],
+        guesser: int,
+        converter: ufal.TagsetConverter | None,
+        forms: ufal.Forms,
+        tagged_lemmas: ufal.TaggedLemmas,
+        token_ranges: ufal.TokenRanges,
+    ) -> Iterator[Token]:
+        ...
+
+    @overload
+    def _tag(
+        self,
+        tokenizer: ufal.Tokenizer,
+        sents: Literal[True],
+        guesser: int,
+        converter: ufal.TagsetConverter | None,
+        forms: ufal.Forms,
+        tagged_lemmas: ufal.TaggedLemmas,
+        token_ranges: ufal.TokenRanges,
+    ) -> Iterator[list[Token]]:
+        ...
+
+    @overload
+    def _tag(
+        self,
+        tokenizer: ufal.Tokenizer,
+        sents: bool,
+        guesser: int,
+        converter: ufal.TagsetConverter | None,
+        forms: ufal.Forms,
+        tagged_lemmas: ufal.TaggedLemmas,
+        token_ranges: ufal.TokenRanges,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
+        ...
+
+    def _tag(
+        self,
+        tokenizer: ufal.Tokenizer,
+        sents: bool,
+        guesser: int,
+        converter: ufal.TagsetConverter | None,
+        forms: ufal.Forms,
+        tagged_lemmas: ufal.TaggedLemmas,
+        token_ranges: ufal.TokenRanges,
+    ) -> Iterator[Token] | Iterator[list[Token]]:
         while tokenizer.nextSentence(forms, token_ranges):
             self._tagger.tag(forms, tagged_lemmas, guesser)
             sent = [] if sents else None

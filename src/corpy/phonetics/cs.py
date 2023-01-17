@@ -27,7 +27,7 @@ import regex as re
 
 from corpy.util import longest_common_substring
 from corpy.morphodita import Token, Tagger
-from ufal.morphodita import DerivationFormatter  # type: ignore
+from ufal.morphodita import DerivationFormatter
 
 LOG = logging.getLogger(__name__)
 
@@ -101,11 +101,14 @@ class _ExceptionRewriter:
         lines.pop(0)
         rules = []
         for line in _filter_comments(lines):
-            match, rewrite = line.split("\t")
-            match = f"(?P<x>{match})" if "(" not in match else match
-            orig = re.search(r"\(\?P<x>(.*?)\)", match).group(1)
-            rules.append((match, orig, rewrite))
-        # reverse sort by length of substring matched, so that longest match applies
+            pat, rewrite = line.split("\t")
+            pat = f"(?P<x>{pat})" if "(" not in pat else pat
+            match = re.search(r"\(\?P<x>(.*?)\)", pat)
+            assert match is not None
+            orig = match.group(1)
+            rules.append((pat, orig, rewrite))
+        # reverse sort by length of substring matched, so that longest match
+        # applies
         rules.sort(key=itemgetter(1), reverse=True)
         re_str = "(" + "|".join(match for (match, _, _) in rules) + ")"
         self._re = re.compile(re_str)
@@ -487,7 +490,7 @@ def transcribe(
     transcribed = ProsodicUnit(to_transcribe).phonetic(
         alphabet=alphabet, hiatus=hiatus, tagger=tagger
     )
-    return [m if m is not None else transcribed.pop(0) for m in matrix]  # type: ignore
+    return [m if m is not None else transcribed.pop(0) for m in matrix]
 
 
 # vi: set foldmethod=marker:

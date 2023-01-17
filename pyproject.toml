@@ -26,8 +26,6 @@ classifiers = [
   "Operating System :: Microsoft :: Windows",
   "Operating System :: POSIX :: Linux",
   "Programming Language :: Python",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: Implementation :: CPython",
@@ -38,13 +36,13 @@ classifiers = [
 ]
 
 # NOTE: When bumping the minimum Python, don't forget to bump it at the
-# beginning of the README as well!
-requires-python = ">=3.8"
+# beginning of the README and in .readthedocs.yml as well, and update
+# classifiers above!
+requires-python = ">=3.10"
 dependencies = [
   # regex is versioned using calver plus it sticks to the API of stdlib's re
   # module, so whichever latest version is fine
   "regex",
-  "lazy>=1.4",
   "lxml>=4.6.1",
   "wordcloud>=1.8.1",
   "ufal.morphodita>=1.10",
