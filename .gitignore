@@ -8,3 +8,4 @@ dist
 *.udpipe
 pip-wheel-metadata
 docs/_build
+src/corpy/_version.py
