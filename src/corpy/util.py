@@ -6,8 +6,8 @@ import inspect
 import builtins
 from contextlib import contextmanager
 
-from types import FrameType, GeneratorType
-from typing import Any, Optional, Iterable, Tuple, NamedTuple
+from types import FrameType
+from typing import Any, Optional, Iterable, NamedTuple
 
 import numpy as np
 
@@ -16,23 +16,19 @@ import numpy as np
 # -------------------------------------------------------------------- Clean env {{{1
 
 
-def _get_user_frame_and_generator(
-    start_frame: FrameType,
-) -> Tuple[FrameType, GeneratorType]:
-    ctxlib_fname = generator = None
+def _get_user_frame(start_frame: FrameType) -> FrameType:
+    ctxlib_fname = None
     # walk up the call stack, skipping frames in this file and in
     # contextlib, to reach the user code that triggered `with clean_env(): ...`
     # and whose globals we want to tamper with
     for frame_info in inspect.getouterframes(start_frame):
         if ctxlib_fname is None and frame_info.filename.endswith("contextlib.py"):
             ctxlib_fname = frame_info.filename
-            generator = frame_info.frame.f_locals["self"].gen
         elif ctxlib_fname is not None and frame_info.filename != ctxlib_fname:
             break
     else:
         raise RuntimeError("User's frame not found in call stack")
-    assert isinstance(generator, GeneratorType)
-    return frame_info.frame, generator
+    return frame_info.frame
 
 
 def _enrich_name_error(err: NameError, pruned_globals: dict[str, Any]):
@@ -160,7 +156,7 @@ def clean_env(
     current_frame = inspect.currentframe()
     if current_frame is None:
         raise RuntimeError("Your Python has no stack frame support in the interpreter")
-    user_frame, clean_env_gen = _get_user_frame_and_generator(current_frame)
+    user_frame = _get_user_frame(current_frame)
 
     # TODO: Maybe try an alternative approach: replace user_frame.f_globals with
     # a dict subclass with a customized getter which will check the position of
@@ -180,22 +176,23 @@ def clean_env(
         finally:
             globals_to_prune.update(pruned_globals)
     else:
+        pruned = False
 
         def global_trace(frame, event, arg):
-            # this means we've reached clean_env's matching __exit__ frame in
-            # contextlib -> stop tracing
-            if getattr(frame.f_locals.get("self"), "gen", None) is clean_env_gen:
-                sys.settrace(None)
+            nonlocal pruned
+            if pruned or event != "call":
                 return
 
             globals_to_prune = frame.f_globals
             pruned_globals = do_clean_env(globals_to_prune)
+            pruned = True
             frame.f_trace_lines = False
 
             def local_trace(frame, event, arg):
                 if event == "return":
                     globals_to_prune.update(pruned_globals)
-                elif event == "exception":
+                    sys.settrace(None)
+                elif event == "exception" and isinstance(arg[1], NameError):
                     _enrich_name_error(arg[1], pruned_globals)
 
             return local_trace

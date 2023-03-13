@@ -55,7 +55,7 @@ def test_reassigned_builtins_are_restored():
     assert not callable(sorted)
 
 
-def test_strict():
+def test_no_strict():
     global foo
     foo = ()
 
@@ -68,6 +68,24 @@ def test_strict():
         with clean_env(strict=False):
             return_foo()
     assert "'foo'" in exc_info.exconly()
+
+
+def test_no_strict_only_prunes_globals_in_direct_children_of_calling_scope():
+    # As in, if I call foo(), then only the global environment of foo should be
+    # pruned (and of course, also that of any function which happens to share
+    # the same environment, so typically all functions defined within the same
+    # interactive session). By contrast, pruning the global environment of
+    # functions from imported modules is generally undesirable. E.g. re.match
+    # uses a global _cache -- we want that to remain accessible, flagging access
+    # to this _cache as a mistake is spurious.
+    import fake_re
+
+    def func_i_wish_to_debug():
+        fake_re.match()
+
+    assert fake_re._cache
+    with clean_env(strict=False):
+        func_i_wish_to_debug()
 
 
 def test_modules():
