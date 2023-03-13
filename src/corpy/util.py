@@ -196,11 +196,7 @@ def clean_env(
                     case "return", _:
                         globals_to_prune.update(pruned_globals)
                         sys.settrace(None)
-                    # NOTE: Use a post-condition here instead of matching
-                    # against NameError() in the first element of the tuple --
-                    # apparently, in an IPython, err will/might be a subclass of
-                    # NameError.
-                    case "exception", (_, err, _) if isinstance(err, NameError):
+                    case "exception", (_, NameError() as err, _):
                         _enrich_name_error(err, pruned_globals)
 
             return local_trace
