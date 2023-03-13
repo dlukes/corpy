@@ -7,7 +7,7 @@ import builtins
 from contextlib import contextmanager
 
 from types import FrameType, GeneratorType
-from typing import Optional, Iterable, Tuple, NamedTuple
+from typing import Any, Optional, Iterable, Tuple, NamedTuple
 
 import numpy as np
 
@@ -35,6 +35,19 @@ def _get_user_frame_and_generator(
     return frame_info.frame, generator
 
 
+def _enrich_name_error(err: NameError, pruned_globals: dict[str, Any]):
+    if err.name in pruned_globals:
+        # TODO: From 3.11 onwards, this would be more cleanly done with
+        # err.add_note. Before switching, also check that IPython has added
+        # support for showing these notes in tracebacks:
+        # https://github.com/ipython/ipython/issues/13849
+        err.args = (
+            f"global {err.name!r} exists but hidden by corpy.util.clean_env. "
+            "Trying to access it may be a mistake? See: "
+            "https://corpy.readthedocs.io/en/stable/guides/clean_env.html",
+        )
+
+
 @contextmanager
 def clean_env(
     *,
@@ -58,7 +71,7 @@ def clean_env(
     ...
     Traceback (most recent call last):
       ...
-    NameError: name 'foo' is not defined
+    NameError: global 'foo' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
 
     The original environment is restored at the end of the block:
 
@@ -75,7 +88,7 @@ def clean_env(
     >>> return_foo()
     Traceback (most recent call last):
       ...
-    NameError: name 'foo' is not defined
+    NameError: global 'foo' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
 
     By default, `clean_env` tries to be clever and leave e.g. functions alone,
     as well as other objects which are likely to be "legitimate" globals. It
@@ -155,11 +168,15 @@ def clean_env(
     # result in both strict and non-strict mode using the same code, which would
     # be good.
 
+    globals_to_prune = pruned_globals = {}
     if strict:
         globals_to_prune = user_frame.f_globals
         pruned_globals = do_clean_env(globals_to_prune)
         try:
             yield
+        except NameError as err:
+            _enrich_name_error(err, pruned_globals)
+            raise err
         finally:
             globals_to_prune.update(pruned_globals)
     else:
@@ -178,6 +195,8 @@ def clean_env(
             def local_trace(frame, event, arg):
                 if event == "return":
                     globals_to_prune.update(pruned_globals)
+                elif event == "exception":
+                    _enrich_name_error(arg[1], pruned_globals)
 
             return local_trace
 

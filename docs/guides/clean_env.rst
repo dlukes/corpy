@@ -110,7 +110,7 @@ problem with our code:
 .. code:: python
 
     >>> from corpy.util import clean_env
-    >>> with clean_env():
+    >>> with clean_env():                    # doctest: +IGNORE_EXCEPTION_DETAIL
     ...     sort_numbers([0, 2, 1])
     ...
     Traceback (most recent call last):
@@ -118,7 +118,7 @@ problem with our code:
         sort_numbers([0, 2, 1])
       File ..., line 2, in sort_numbers
         return sorted(numbers)
-    NameError: name 'numbers' is not defined
+    NameError: global 'numbers' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html. Did you mean: 'numbrs'?
 
 Which gives you a good hint what the problem might be, so you can now fix your
 function and try again:
@@ -158,7 +158,7 @@ because ``clean_env`` hides them:
     Traceback (most recent call last):
       File ..., line 2, in <module>
         sort_numbers(numbers)
-    NameError: name 'numbers' is not defined
+    NameError: global 'numbers' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
 
 That's where the ``strict=False`` option comes in. In the code below, it allows
 referring to the ``numbers`` global variable as part of the ``with`` block, and

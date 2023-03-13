@@ -157,16 +157,22 @@ def test_can_be_used_as_decorator():
 # functionality as above, to make sure that the IPython execution context
 # doesn't break them.
 
+FOO_NOT_DEFINED_ERR = (
+    "\nNameError: global 'foo' exists but hidden by corpy.util.clean_env. "
+    "Trying to access it may be a mistake? "
+    "See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html\n"
+)
+
 
 def test_cell_magic_strict(ip):
     with capture_output() as captured:
         ip.run_cell("%%clean_env\nprint(foo)")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
     with capture_output() as captured:
         ip.run_cell("%%clean_env\nbar()")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
@@ -178,19 +184,19 @@ def test_cell_magic_non_strict(ip):
 
     with capture_output() as captured:
         ip.run_cell("%%clean_env -X\nbar()")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
 def test_line_magic_strict(ip):
     with capture_output() as captured:
         ip.run_cell("%clean_env print(foo)")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
     with capture_output() as captured:
         ip.run_cell("%clean_env bar()")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
@@ -202,5 +208,5 @@ def test_line_magic_non_strict(ip):
 
     with capture_output() as captured:
         ip.run_cell("%clean_env -X bar()")
-    assert captured.stdout.endswith("\nNameError: name 'foo' is not defined\n")
+    assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr

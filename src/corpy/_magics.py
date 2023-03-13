@@ -108,6 +108,6 @@ class CorpyMagics(Magics):
             code += "\n" + cell
         elif cell is not None:
             code = cell
-        code = f"with clean_env({kwargs}):\n" + textwrap.indent(code, " ")
-        self.shell.run_cell("from corpy.util import clean_env")
+        code = f"with corpy.util.clean_env({kwargs}):\n" + textwrap.indent(code, " ")
+        self.shell.run_cell("import corpy.util")
         return self.shell.run_cell(code).result
