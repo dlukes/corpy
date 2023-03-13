@@ -12,7 +12,6 @@ init:
 	python$(py_version) -m venv venv
 	$(upgrade_tools)
 
-requirements_in := pyproject.toml self-editable.in
 # --build-isolation is the default; --resolver=backtracking will become the
 # default in v7.0.0. Getting editable installs with relative paths is a bit
 # workaroundy right now, see https://github.com/jazzband/pip-tools/issues/204.
@@ -22,11 +21,12 @@ requirements_in := pyproject.toml self-editable.in
 # https://github.com/jazzband/pip-tools#cross-environment-usage-of-requirementsinrequirementstxt-and-pip-compile
 pip_compile := $(python) -m piptools compile --extra=dev --resolver=backtracking \
                --emit-options --generate-hashes --allow-unsafe \
-               --output-file requirements.txt $(requirements_in)
-requirements.txt: $(requirements_in)
+               --output-file requirements.txt pyproject.toml
+requirements.txt: pyproject.toml
 	$(pip_compile)
 
-pip_sync := $(python) -m piptools sync requirements.txt
+pip_sync := $(python) -m piptools sync requirements.txt && \
+            $(python) -m pip install --no-deps --editable .
 sync:
 	$(pip_sync)
 
