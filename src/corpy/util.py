@@ -1,19 +1,20 @@
 """Small utility functions.
 
 """
-import sys
-import inspect
 import builtins
 from contextlib import contextmanager
-
+import inspect
+import sys
 from types import FrameType
-from typing import Any, Optional, Iterable, NamedTuple
+import typing as t
 
 import numpy as np
 
 
 #
 # -------------------------------------------------------------------- Clean env {{{1
+
+GlobalsDict = dict[str, t.Any]
 
 
 def _get_user_frame(start_frame: FrameType) -> FrameType:
@@ -31,7 +32,7 @@ def _get_user_frame(start_frame: FrameType) -> FrameType:
     return frame_info.frame
 
 
-def _enrich_name_error(err: NameError, pruned_globals: dict[str, Any]):
+def _enrich_name_error(err: NameError, pruned_globals: GlobalsDict):
     if err.name in pruned_globals:
         # TODO: From 3.11 onwards, this would be more cleanly done with
         # err.add_note. Before switching, also check that IPython has added
@@ -47,8 +48,8 @@ def _enrich_name_error(err: NameError, pruned_globals: dict[str, Any]):
 @contextmanager
 def clean_env(
     *,
-    blacklist: Optional[Iterable[str]] = None,
-    whitelist: Optional[Iterable[str]] = None,
+    blacklist: t.Iterable[str] | None = None,
+    whitelist: t.Iterable[str] | None = None,
     strict: bool = True,
     restore_builtins: bool = True,
     modules: bool = False,
@@ -120,7 +121,7 @@ def clean_env(
     if bw_intersection:
         raise ValueError(f"Blacklist and whitelist overlap: {bw_intersection}")
 
-    def do_clean_env(globals_to_prune: dict) -> dict:
+    def do_clean_env(globals_to_prune: GlobalsDict) -> GlobalsDict:
         pruned_globals = {}
         # NOTE: We'll be updating the globals dict as part of the loop, so we need
         # to store the items in a list, otherwise our iterator would be invalidated
@@ -178,7 +179,9 @@ def clean_env(
     else:
         pruned = False
 
-        def global_trace(frame, event, arg):
+        def global_trace(
+            frame: FrameType, event: str, arg: tuple | None
+        ) -> t.Callable | None:
             nonlocal pruned
             if pruned or event != "call":
                 return
@@ -188,12 +191,17 @@ def clean_env(
             pruned = True
             frame.f_trace_lines = False
 
-            def local_trace(frame, event, arg):
-                if event == "return":
-                    globals_to_prune.update(pruned_globals)
-                    sys.settrace(None)
-                elif event == "exception" and isinstance(arg[1], NameError):
-                    _enrich_name_error(arg[1], pruned_globals)
+            def local_trace(frame: FrameType, event: str, arg: tuple | None):
+                match event, arg:
+                    case "return", _:
+                        globals_to_prune.update(pruned_globals)
+                        sys.settrace(None)
+                    # NOTE: Use a post-condition here instead of matching
+                    # against NameError() in the first element of the tuple --
+                    # apparently, in an IPython, err will/might be a subclass of
+                    # NameError.
+                    case "exception", (_, err, _) if isinstance(err, NameError):
+                        _enrich_name_error(err, pruned_globals)
 
             return local_trace
 
@@ -205,7 +213,7 @@ def clean_env(
 # ----------------------------------------------------- Longest common substring {{{1
 
 
-class LongestCommonSubstring(NamedTuple):
+class LongestCommonSubstring(t.NamedTuple):
     """Describes longest common substring between two strings.
 
     Returned by :func:`longest_common_substring`.
@@ -222,7 +230,7 @@ LongestCommonSubstring.start2.__doc__ += "; substring start index in second stri
 LongestCommonSubstring.length.__doc__ += "; substring length"  # type: ignore
 
 
-def longest_common_substring(str1: str, str2: str) -> Optional[LongestCommonSubstring]:
+def longest_common_substring(str1: str, str2: str) -> LongestCommonSubstring | None:
     """Find longest common substring between `str1` and `str2`, if it exists.
 
     .. note::
