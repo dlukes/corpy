@@ -55,7 +55,7 @@ Here's an idea of what you can do with CorPy:
 - `easily generate word clouds
   <https://corpy.rtfd.io/en/stable/guides/vis.html>`__
 - run code in `a sanitized global environment
-  <https://corpy.rtfd.io/en/stable/guides/clean_env.html>`__ (useful for
+  <https://corpy.rtfd.io/en/stable/guides/no_globals.html>`__ (useful for
   debugging in interactive sessions, e.g. with Jupyter notebooks in `JupyterLab
   <https://jupyterlab.rtfd.io>`__)
 - `generate phonetic transcripts of Czech texts

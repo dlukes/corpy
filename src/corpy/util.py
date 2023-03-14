@@ -12,7 +12,7 @@ import numpy as np
 
 
 #
-# -------------------------------------------------------------------- Clean env {{{1
+# ------------------------------------------------------------------- No globals {{{1
 
 GlobalsDict = dict[str, t.Any]
 
@@ -20,7 +20,7 @@ GlobalsDict = dict[str, t.Any]
 def _get_user_frame(start_frame: FrameType) -> FrameType:
     ctxlib_fname = None
     # walk up the call stack, skipping frames in this file and in
-    # contextlib, to reach the user code that triggered `with clean_env(): ...`
+    # contextlib, to reach the user code that triggered `with no_globals(): ...`
     # and whose globals we want to tamper with
     for frame_info in inspect.getouterframes(start_frame):
         if ctxlib_fname is None and frame_info.filename.endswith("contextlib.py"):
@@ -39,14 +39,14 @@ def _enrich_name_error(err: NameError, pruned_globals: GlobalsDict):
         # support for showing these notes in tracebacks:
         # https://github.com/ipython/ipython/issues/13849
         err.args = (
-            f"global {err.name!r} exists but hidden by corpy.util.clean_env. "
+            f"global {err.name!r} exists but hidden by corpy.util.no_globals. "
             "Trying to access it may be a mistake? See: "
-            "https://corpy.readthedocs.io/en/stable/guides/clean_env.html",
+            "https://corpy.readthedocs.io/en/stable/guides/no_globals.html",
         )
 
 
 @contextmanager
-def clean_env(
+def no_globals(
     *,
     blacklist: t.Iterable[str] | None = None,
     whitelist: t.Iterable[str] | None = None,
@@ -63,12 +63,12 @@ def clean_env(
     A context manager which temporarily removes global variables from scope:
 
     >>> foo = 42
-    >>> with clean_env():
+    >>> with no_globals():
     ...     foo
     ...
     Traceback (most recent call last):
       ...
-    NameError: global 'foo' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
+    NameError: global 'foo' exists but hidden by corpy.util.no_globals. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/no_globals.html
 
     The original environment is restored at the end of the block:
 
@@ -78,16 +78,16 @@ def clean_env(
     Also works as a decorator, which is like wrapping the entire function body
     with the context manager:
 
-    >>> @clean_env()
+    >>> @no_globals()
     ... def return_foo():
     ...     return foo
     ...
     >>> return_foo()
     Traceback (most recent call last):
       ...
-    NameError: global 'foo' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
+    NameError: global 'foo' exists but hidden by corpy.util.no_globals. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/no_globals.html
 
-    By default, `clean_env` tries to be clever and leave e.g. functions alone,
+    By default, `no_globals` tries to be clever and leave e.g. functions alone,
     as well as other objects which are likely to be "legitimate" globals. It
     also restores overwritten builtins.
 
@@ -102,7 +102,7 @@ def clean_env(
     :param strict: In non-strict mode, allow global variables in the current
         scope, i.e. only start pruning within function calls. NOTE: This is
         slower because it requires tracing the function calls. Also, when using
-        `clean_env` as a function decorator, non-strict probably doesn't make
+        `no_globals` as a function decorator, non-strict probably doesn't make
         sense.
     :param restore_builtins: Make sure that the conventional names for built-in
         objects point to those objects (beginners often use ``list`` or
@@ -121,7 +121,7 @@ def clean_env(
     if bw_intersection:
         raise ValueError(f"Blacklist and whitelist overlap: {bw_intersection}")
 
-    def do_clean_env(globals_to_prune: GlobalsDict) -> GlobalsDict:
+    def prune_globals(globals_to_prune: GlobalsDict) -> GlobalsDict:
         pruned_globals = {}
         # NOTE: We'll be updating the globals dict as part of the loop, so we need
         # to store the items in a list, otherwise our iterator would be invalidated
@@ -168,7 +168,7 @@ def clean_env(
     globals_to_prune = pruned_globals = {}
     if strict:
         globals_to_prune = user_frame.f_globals
-        pruned_globals = do_clean_env(globals_to_prune)
+        pruned_globals = prune_globals(globals_to_prune)
         try:
             yield
         except NameError as err:
@@ -187,7 +187,7 @@ def clean_env(
                 return
 
             globals_to_prune = frame.f_globals
-            pruned_globals = do_clean_env(globals_to_prune)
+            pruned_globals = prune_globals(globals_to_prune)
             pruned = True
             frame.f_trace_lines = False
 

@@ -9,7 +9,7 @@ starts misbehaving. You suspect it has inadvertently become entangled in all
 that global state, accessing global variables it shouldn't, and you'd like to
 disentangle it. Where to begin?
 
-:func:`corpy.util.clean_env` to the rescue! It allows you to run a block of code
+:func:`corpy.util.no_globals` to the rescue! It allows you to run a block of code
 in a sanitized global environment (where the exact meaning of *sanitized* is
 fairly customizable). When using an IPython kernel, load the ``corpy``
 extension, so that you can use the `cell/line magic command
@@ -27,15 +27,15 @@ provides:
 .. ipython::
    :okexcept:
 
-   In [4]: %%clean_env
+   In [4]: %%no_globals
       ...: print(foo)
 
 .. ipython::
    :okexcept:
 
-   In [5]: %clean_env print(foo)
+   In [5]: %no_globals print(foo)
 
-As you can see, :func:`~corpy.util.clean_env` temporarily hides the global
+As you can see, :func:`~corpy.util.no_globals` temporarily hides the global
 variable ``foo``. Why is this useful? When working interactively, you often end
 up creating a lot of global variables while experimenting. Some of them might
 even end up disappearing from the written record, as you edit and delete cells.
@@ -46,14 +46,14 @@ builtin functions have been overwritten, etc. See examples below.
 .. note::
 
    In order to not be restricted to IPython interactive sessions, the examples
-   below primarily use :func:`~corpy.util.clean_env` as a context manager, which
+   below primarily use :func:`~corpy.util.no_globals` as a context manager, which
    works everywhere, including the vanilla Python REPL and scripts. In IPython
    though, the magic command shown above is much more convenient, and offers all
-   of the same features. Run ``%clean_env?`` in IPython for details on how to
+   of the same features. Run ``%no_globals?`` in IPython for details on how to
    use them.
 
-   One option you should definitely know about is ``%clean_env -X``, which is
-   equivalent to ``with clean_env(strict=False): ...`` (see :ref:`the end of the
+   One option you should definitely know about is ``%no_globals -X``, which is
+   equivalent to ``with no_globals(strict=False): ...`` (see :ref:`the end of the
    next section <non-strict>` for details on what that does).
 
 Global variables can hide typos
@@ -100,7 +100,7 @@ the sorted version of ``numbers`` again:
     >>> sort_numbers([0, 2, 1])
     [0, 1, 2, 3, 4]
 
-Now, what :func:`corpy.util.clean_env` does is to provide a context manager
+Now, what :func:`corpy.util.no_globals` does is to provide a context manager
 which runs a block of code in a sanitized global environment, as a way to
 temporarily pretend that (most of) your interactive experimentation (a.k.a.
 polluting the global environment) didn't happen. Running the same code under the
@@ -109,8 +109,8 @@ problem with our code:
 
 .. code:: python
 
-    >>> from corpy.util import clean_env
-    >>> with clean_env():                    # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> from corpy.util import no_globals
+    >>> with no_globals():                   # doctest: +IGNORE_EXCEPTION_DETAIL
     ...     sort_numbers([0, 2, 1])
     ...
     Traceback (most recent call last):
@@ -118,7 +118,7 @@ problem with our code:
         sort_numbers([0, 2, 1])
       File ..., line 2, in sort_numbers
         return sorted(numbers)
-    NameError: global 'numbers' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html. Did you mean: 'numbrs'?
+    NameError: global 'numbers' exists but hidden by corpy.util.no_globals. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/no_globals.html. Did you mean: 'numbrs'?
 
 Which gives you a good hint what the problem might be, so you can now fix your
 function and try again:
@@ -129,36 +129,36 @@ function and try again:
     >>> def sort_numbers(numbers):
     ...     return sorted(numbers)
     ...
-    >>> with clean_env():
+    >>> with no_globals():
     ...     sort_numbers([0, 2, 1])
     ...
     [0, 1, 2]
 
-By default, ``clean_env`` tries to be "smart" about which globals to remove and
+By default, ``no_globals`` tries to be "smart" about which globals to remove and
 which to keep, e.g. it leaves functions alone, as you've probably noticed, since
 we were able to call ``sort_numbers`` within the ``with`` block. If the defaults
 don't suit you though, you can tweak its behavior by using blacklists or
 whitelists and other options. Check out the documentation for
-:func:`corpy.util.clean_env` for further details.
+:func:`corpy.util.no_globals` for further details.
 
 .. _non-strict:
 
 One common case where you might want to change the defaults is to make
-``clean_env`` a little bit more lenient, so that it allows all global variables
+``no_globals`` a little bit more lenient, so that it allows all global variables
 within the ``with`` block itself, and only starts pruning them inside function
 calls. Typically, you'll want to use previously defined (global) variables to
-test your functions under ``clean_env``, but by default, you can't, obviously,
-because ``clean_env`` hides them:
+test your functions under ``no_globals``, but by default, you can't, obviously,
+because ``no_globals`` hides them:
 
 .. code:: python
 
-    >>> with clean_env():
+    >>> with no_globals():
     ...     sort_numbers(numbers)
     ...
     Traceback (most recent call last):
       File ..., line 2, in <module>
         sort_numbers(numbers)
-    NameError: global 'numbers' exists but hidden by corpy.util.clean_env. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html
+    NameError: global 'numbers' exists but hidden by corpy.util.no_globals. Trying to access it may be a mistake? See: https://corpy.readthedocs.io/en/stable/guides/no_globals.html
 
 That's where the ``strict=False`` option comes in. In the code below, it allows
 referring to the ``numbers`` global variable as part of the ``with`` block, and
@@ -166,7 +166,7 @@ only hides it during the function call.
 
 .. code:: python
 
-    >>> with clean_env(strict=False):
+    >>> with no_globals(strict=False):
     ...     sort_numbers(numbers)
     ...
     [0, 1, 2, 3, 4]
@@ -203,12 +203,12 @@ and how to fix it. However, if this ends up breaking example code provided *by
 the teacher*, the student might not realize it's their fault -- after all, how
 could they break code they didn't write?
 
-This is why by default, ``clean_env`` restores any overwritten builtins, because
+This is why by default, ``no_globals`` restores any overwritten builtins, because
 it assumes reassigning builtins is a mistake:
 
 .. code:: python
 
-    >>> with clean_env():
+    >>> with no_globals():
     ...     sorted
     ...
     <built-in function sorted>

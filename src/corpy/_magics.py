@@ -4,11 +4,11 @@ from typing import Any, Optional, Dict
 
 from IPython.core.magic import Magics, magics_class, line_cell_magic
 
-from .util import clean_env
+from .util import no_globals
 
 
 # TODO: unit-test this, to ensure magic options are properly mapped to kwargs?
-def _clean_env_opts2kwargs(opts: Dict[str, Any]) -> Dict[str, Any]:
+def _no_globals_opts2kwargs(opts: Dict[str, Any]) -> Dict[str, Any]:
     opt2kwarg = dict(
         b="blacklist",
         w="whitelist",
@@ -20,7 +20,7 @@ def _clean_env_opts2kwargs(opts: Dict[str, Any]) -> Dict[str, Any]:
         d="dunder",
         s="sunder",
     )
-    kwargs = {k: v.default for k, v in inspect.signature(clean_env).parameters.items()}
+    kwargs = {k: v.default for k, v in inspect.signature(no_globals).parameters.items()}
     for opt, val in opts.items():
         kwarg = opt2kwarg[opt.lower()]
         if kwarg.endswith("list"):
@@ -33,14 +33,14 @@ def _clean_env_opts2kwargs(opts: Dict[str, Any]) -> Dict[str, Any]:
 @magics_class
 class CorpyMagics(Magics):
     @line_cell_magic
-    def clean_env(self, line: str, cell: Optional[str] = None) -> Any:
+    def no_globals(self, line: str, cell: Optional[str] = None) -> Any:
         """Run a block of code in a sanitized global environment.
 
         Usage, in line mode:
-          %clean_env [options] statement
+          %no_globals [options] statement
 
         Usage, in cell mode:
-          %%clean_env [options] [statement]
+          %%no_globals [options] [statement]
           code...
           code...
 
@@ -94,20 +94,20 @@ class CorpyMagics(Magics):
 
         See also:
 
-          from corpy.util import clean_env
-          clean_env?
+          from corpy.util import no_globals
+          no_globals?
 
         """
         opts, code = self.parse_options(
             line, "b:w:xXrRmMcCuUdDsS", list_all=True, posix=False
         )
-        kwargs = _clean_env_opts2kwargs(opts)
+        kwargs = _no_globals_opts2kwargs(opts)
         kwargs = ", ".join(f"{k}={v}" for k, v in kwargs.items())
         assert isinstance(code, str)
         if code.strip() and cell is not None:
             code += "\n" + cell
         elif cell is not None:
             code = cell
-        code = f"with corpy.util.clean_env({kwargs}):\n" + textwrap.indent(code, " ")
+        code = f"with corpy.util.no_globals({kwargs}):\n" + textwrap.indent(code, " ")
         self.shell.run_cell("import corpy.util")
         return self.shell.run_cell(code).result

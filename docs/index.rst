@@ -10,7 +10,7 @@
    guides/udpipe.rst
    guides/morphodita.rst
    guides/vis.rst
-   guides/clean_env.rst
+   guides/no_globals.rst
    guides/phonetics_cs.rst
    guides/vertical.rst
    guides/cli.rst

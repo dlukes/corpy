@@ -1,4 +1,4 @@
-"""A dummy re module for testing clean_env with strict=True.
+"""A dummy re module for testing no_globals with strict=True.
 
 """
 

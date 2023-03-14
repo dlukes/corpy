@@ -2,7 +2,7 @@ import pytest
 from IPython.testing.globalipapp import start_ipython
 from IPython.utils.capture import capture_output
 
-from corpy.util import clean_env
+from corpy.util import no_globals
 
 
 @pytest.fixture(scope="module")
@@ -26,23 +26,23 @@ def bar():
 
 def test_blacklist_works():
     globals().update(__dunder=1)
-    with clean_env():
+    with no_globals():
         assert globals().get("__dunder") == 1
-    with clean_env(blacklist=["__dunder"]):
+    with no_globals(blacklist=["__dunder"]):
         assert globals().get("__dunder") is None
 
 
 def test_whitelist_works():
     globals().update(foo=1)
-    with clean_env():
+    with no_globals():
         assert globals().get("foo") is None
-    with clean_env(whitelist=["foo"]):
+    with no_globals(whitelist=["foo"]):
         assert globals().get("foo") == 1
 
 
 def test_blacklist_cannot_overlap_with_whitelist():
     with pytest.raises(ValueError) as exc_info:
-        with clean_env(blacklist=["foo", "bar"], whitelist=["bar", "baz"]):
+        with no_globals(blacklist=["foo", "bar"], whitelist=["bar", "baz"]):
             pass
     assert exc_info.match(r"\{'bar'\}$")
 
@@ -50,7 +50,7 @@ def test_blacklist_cannot_overlap_with_whitelist():
 def test_reassigned_builtins_are_restored():
     globals().update(sorted=None)
     assert not callable(sorted)
-    with clean_env():
+    with no_globals():
         assert callable(sorted)
     assert not callable(sorted)
 
@@ -62,10 +62,10 @@ def test_no_strict():
     def return_foo():
         return foo
 
-    with clean_env(strict=False):
+    with no_globals(strict=False):
         assert foo == ()
     with pytest.raises(NameError) as exc_info:
-        with clean_env(strict=False):
+        with no_globals(strict=False):
             return_foo()
     assert "'foo'" in exc_info.exconly()
 
@@ -84,47 +84,47 @@ def test_no_strict_only_prunes_globals_in_direct_children_of_calling_scope():
         fake_re.match()
 
     assert fake_re._cache
-    with clean_env(strict=False):
+    with no_globals(strict=False):
         func_i_wish_to_debug()
 
 
 def test_modules():
-    with clean_env():
+    with no_globals():
         assert globals().get("pytest") is pytest
-    with clean_env(modules=True):
+    with no_globals(modules=True):
         assert globals().get("pytest") is None
 
 
 def test_callables():
     foo = lambda x: x
     globals().update(foo=foo)
-    with clean_env():
+    with no_globals():
         assert globals().get("foo") is foo
-    with clean_env(callables=True):
+    with no_globals(callables=True):
         assert globals().get("foo") is None
 
 
 def test_upper():
     globals().update(FOO_BAR=1)
-    with clean_env():
+    with no_globals():
         assert globals().get("FOO_BAR") == 1
-    with clean_env(upper=True):
+    with no_globals(upper=True):
         assert globals().get("FOO_BAR") is None
 
 
 def test_dunder():
     globals().update(__dunder=1)
-    with clean_env():
+    with no_globals():
         assert globals().get("__dunder") == 1
-    with clean_env(dunder=True):
+    with no_globals(dunder=True):
         assert globals().get("__dunder") is None
 
 
 def test_sunder():
     globals().update(_sunder=1)
-    with clean_env(sunder=False):
+    with no_globals(sunder=False):
         assert globals().get("_sunder") == 1
-    with clean_env():
+    with no_globals():
         assert globals().get("_sunder") is None
 
 
@@ -132,11 +132,11 @@ def test_can_be_used_as_decorator():
     global foo, FOO
     foo = FOO = ()
 
-    @clean_env()
+    @no_globals()
     def return_foo():
         return foo
 
-    @clean_env()
+    @no_globals()
     def return_FOO():
         return FOO
 
@@ -147,16 +147,16 @@ def test_can_be_used_as_decorator():
 
 
 # We can't use pytest.raises in the IPython magic tests, in part because
-# clean_env itself uses run_cell. It's that nested call that raises an error,
+# no_globals itself uses run_cell. It's that nested call that raises an error,
 # which is then handled by the IPython shell, i.e. printed to stdout, at which
 # point it's considered handled and it's not propagated further out into the
 # outer run_cell call here in the test suite, so the result we get here looks as
 # if there was no error.
 #
-# I could in theory call raise_error on the run_cell result in clean_env, but I
+# I could in theory call raise_error on the run_cell result in no_globals, but I
 # would either have to detect running in a test scenario and only do it then, or
 # I'd have to accept that this additional traceback pointing into the guts of
-# corpy is shown to users every time clean_env does its job and catches access
+# corpy is shown to users every time no_globals does its job and catches access
 # to a global, which is unacceptable. And I could *still* not just use
 # pytest.raises, I'd have to manually call raise_error here in the test case as
 # well, or test against the error_in_exec attribute of the result.
@@ -176,55 +176,55 @@ def test_can_be_used_as_decorator():
 # doesn't break them.
 
 FOO_NOT_DEFINED_ERR = (
-    "\nNameError: global 'foo' exists but hidden by corpy.util.clean_env. "
+    "\nNameError: global 'foo' exists but hidden by corpy.util.no_globals. "
     "Trying to access it may be a mistake? "
-    "See: https://corpy.readthedocs.io/en/stable/guides/clean_env.html\n"
+    "See: https://corpy.readthedocs.io/en/stable/guides/no_globals.html\n"
 )
 
 
 def test_cell_magic_strict(ip):
     with capture_output() as captured:
-        ip.run_cell("%%clean_env\nprint(foo)")
+        ip.run_cell("%%no_globals\nprint(foo)")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
     with capture_output() as captured:
-        ip.run_cell("%%clean_env\nbar()")
+        ip.run_cell("%%no_globals\nbar()")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
 def test_cell_magic_non_strict(ip):
     with capture_output() as captured:
-        ip.run_cell("%%clean_env -X\nprint(foo)")
+        ip.run_cell("%%no_globals -X\nprint(foo)")
     assert captured.stdout == "1\n"
     assert not captured.stderr
 
     with capture_output() as captured:
-        ip.run_cell("%%clean_env -X\nbar()")
+        ip.run_cell("%%no_globals -X\nbar()")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
 def test_line_magic_strict(ip):
     with capture_output() as captured:
-        ip.run_cell("%clean_env print(foo)")
+        ip.run_cell("%no_globals print(foo)")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
     with capture_output() as captured:
-        ip.run_cell("%clean_env bar()")
+        ip.run_cell("%no_globals bar()")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
 
 
 def test_line_magic_non_strict(ip):
     with capture_output() as captured:
-        ip.run_cell("%clean_env -X print(foo)")
+        ip.run_cell("%no_globals -X print(foo)")
     assert captured.stdout == "1\n"
     assert not captured.stderr
 
     with capture_output() as captured:
-        ip.run_cell("%clean_env -X bar()")
+        ip.run_cell("%no_globals -X bar()")
     assert captured.stdout.endswith(FOO_NOT_DEFINED_ERR)
     assert not captured.stderr
