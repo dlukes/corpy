@@ -1,4 +1,4 @@
-.PHONY: init sync upgrade models test publish clean
+.PHONY: init sync upgrade models test upgrade_docs docs publish clean
 
 py_version := 3.10
 python := venv/bin/python
@@ -61,6 +61,32 @@ models: $(udpipe_model) $(morphodita_tagger)
 test:
 	$(python) -m pytest
 	@echo 'TIP: To investigate errors in test cases, re-run pytest with --log-level DEBUG.'
+
+# ---------------------------------------------------------------- Documentation {{{1
+
+rtd_reqs := docs/requirements.txt
+upgrade_docs:
+	@echo 'Updating ReadTheDocs requirements.'
+	echo "# ---8<--- MANAGED BY 'make upgrade_docs'; DO NOT EDIT! --->8---" >$(rtd_reqs)
+	$(python) -m pip freeze | \
+	  grep -iP '^(sphinx|furo|ipython)==' >>$(rtd_reqs)
+	echo "# ---8<----------------------------------------->8---" >>$(rtd_reqs)
+
+docs_src := docs
+docs_build := docs/_build
+docs:
+	@echo "Building docs; if it hangs, re-run without '-j auto' and redirection to get helpful error output."
+	# -n is nit-picky mode, which checks for missing references; however, we're only
+	# interested in missing references to stuff defined as part of corpy, and not
+	# the warning emitted upon importing corpy when no IPython session is found
+	$(python) -m sphinx.cmd.build -j auto -Ean $(docs_src) $(docs_build) 2>&1 | \
+	  { grep -P "WARNING.*corpy" || [ $$? = 1 ]; } | \
+	  { grep -Pv "IPython session not found" || [ $$? = 1 ]; }
+
+linkcheck:
+	# possibly also check external links every now and then
+	$(python) -m sphinx.cmd.build -b linkcheck $(docs_src) $(docs_build)
+
 
 # ------------------------------------------------------------------- Publishing {{{1
 
