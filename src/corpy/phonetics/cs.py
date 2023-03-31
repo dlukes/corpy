@@ -26,8 +26,20 @@ from typing import (
 import regex as re
 
 from corpy.util import longest_common_substring
-from corpy.morphodita import Token, Tagger
-from ufal.morphodita import DerivationFormatter
+
+# from corpy.morphodita import Token, Tagger
+# from ufal.morphodita import DerivationFormatter
+class Token:
+    pass
+
+
+class Tagger:
+    pass
+
+
+class DerivationFormatter:
+    pass
+
 
 LOG = logging.getLogger(__name__)
 
