@@ -108,13 +108,8 @@ Dependencies and building the docs
 ----------------------------------
 
 ``corpy`` needs to be installed in the ReadTheDocs virtualenv for ``autodoc`` to
-work. That's configured in ``.readthedocs.yml``. However, ``pip`` doesn't
-install ``[tool.poetry.dev-dependencies]``, which contain the Sphinx version and
-theme we're using. Maybe there's a way of forcing that, but we probably don't
-want to anyway -- it's a waste of time to install linters, testing frameworks
-etc. that won't be used. So instead, we have a ``docs/requirements.txt`` file
-managed by ``check.sh`` which only contains Sphinx + the theme, and which we
-specify via ``.readthedocs.yml``.
+work. The optional dependencies in the ``doc`` group are also needed. This is
+all configured in ``.readthedocs.yml``.
 
 .. license-marker
 

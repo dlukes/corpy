@@ -19,8 +19,8 @@ init:
 # version etc. That's too much work right now for something that's essentially
 # just a best effort attempt to replicate your last working dev env. but see:
 # https://github.com/jazzband/pip-tools#cross-environment-usage-of-requirementsinrequirementstxt-and-pip-compile
-pip_compile := $(python) -m piptools compile --extra=dev --resolver=backtracking \
-               --emit-options --generate-hashes --allow-unsafe \
+pip_compile := $(python) -m piptools compile --extra=dev --extra=doc \
+               --resolver=backtracking --emit-options --generate-hashes --allow-unsafe \
                --output-file requirements.txt pyproject.toml
 requirements.txt: pyproject.toml
 	$(pip_compile)
@@ -63,14 +63,6 @@ test:
 	@echo 'TIP: To investigate errors in test cases, re-run pytest with --log-level DEBUG.'
 
 # ---------------------------------------------------------------- Documentation {{{1
-
-rtd_reqs := docs/requirements.txt
-upgrade_docs:
-	@echo 'Updating ReadTheDocs requirements.'
-	echo "# ---8<--- MANAGED BY 'make upgrade_docs'; DO NOT EDIT! --->8---" >$(rtd_reqs)
-	$(python) -m pip freeze | \
-	  grep -iP '^(sphinx|furo|ipython)==' >>$(rtd_reqs)
-	echo "# ---8<----------------------------------------->8---" >>$(rtd_reqs)
 
 docs_src := docs
 docs_build := docs/_build

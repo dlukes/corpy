@@ -61,15 +61,8 @@ xc = "corpy.scripts.xc:main"
 zip-verticals = "corpy.scripts.zip_verticals:main"
 
 [project.optional-dependencies]
-dev = [
-  "ipython",
-  "ipdb",
-  "pytest",
-  "build",
-  "furo",
-  "twine",
-  "sphinx>=4.1.2",
-]
+dev = ["ipython", "ipdb", "pytest", "build", "twine"]
+doc = ["ipython", "sphinx", "furo"]
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]
