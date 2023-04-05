@@ -1,7 +1,16 @@
-.PHONY: init sync upgrade models test upgrade_docs docs publish clean
+.PHONY: all init sync upgrade models test upgrade_docs docs publish clean
 
 py_version := 3.10
 python := venv/bin/python
+
+all: upgrade models test docs clean dist
+	@echo "======================================================================"
+	@echo "Possible next steps:"
+	@echo
+	@echo "- Tag new release, then re-run 'make clean' and 'make dist' to create"
+	@echo "  release artifacts."
+	@echo "- Run 'make publish' to upload release artifacts to PyPI."
+	@echo "- Run 'make lincheck' to check external links."
 
 # -------------------------------------------------------- Dependency management {{{1
 
