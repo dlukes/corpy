@@ -59,7 +59,7 @@ $(morphodita_tagger):
 models: $(udpipe_model) $(morphodita_tagger)
 
 test:
-	$(python) -m pytest
+	$(python) -m pytest tests docs
 	@echo 'TIP: To investigate errors in test cases, re-run pytest with --log-level DEBUG.'
 
 # ---------------------------------------------------------------- Documentation {{{1
