@@ -208,6 +208,10 @@ class ProsodicUnit:
 
     """
 
+    # A set of tagger IDs which have already passed or failed the poukázat test,
+    # and therefore don't need to be checked again.
+    _tested_taggers = set()
+
     def __init__(self, orthographic: List[str]):
         self.orthographic = orthographic
         self._phonetic: Optional[List[Phone]] = None
@@ -235,19 +239,23 @@ class ProsodicUnit:
             self._phonetic = trans
         return self._split_words_and_translate(self._phonetic, alphabet)
 
-    @staticmethod
-    def _smart_vowel_seqs(input_: List[str], tagger: Optional[Tagger]) -> List[str]:
+    @classmethod
+    def _smart_vowel_seqs(
+        cls, input_: List[str], tagger: Optional[Tagger]
+    ) -> List[str]:
         if tagger is None:
             return input_
         deriv = DerivationFormatter.newPathDerivationFormatter(
             tagger._tagger.getMorpho().getDerivator()
         )
-        if deriv.formatDerivation("poukázat").split()[0] == "poukázat":
-            warnings.warn(
-                "You seem to be using a MorphoDiTa model based on an older version "
-                "of DeriNet. Many prefixes won't be detected. Upgrade to a newer "
-                "model if possible."
-            )
+        if id(tagger._tagger) not in cls._tested_taggers:
+            cls._tested_taggers.add(id(tagger._tagger))
+            if len(deriv.formatDerivation("poukázat")) == 1:
+                warnings.warn(
+                    "You seem to be using a MorphoDiTa model based on an older version "
+                    "of DeriNet. Many prefixes won't be detected. Upgrade to a newer "
+                    "model if possible."
+                )
 
         output = []
         for token in cast(
